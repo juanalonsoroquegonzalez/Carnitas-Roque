@@ -1,0 +1,373 @@
+<div id="phone-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-xl p-6 w-80 shadow-lg">
+    <h3 class="text-lg font-semibold mb-4">Ingresa tu número de teléfono</h3>
+    <input type="text" id="phone-input-modal" placeholder="55 1234 5678" class="w-full border px-3 py-2 rounded mb-4">
+    <div class="flex justify-end gap-2">
+      <button id="phone-cancel" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 transition">Cancelar</button>
+      <button id="phone-submit" class="px-4 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-500 transition">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Carrito flotante -->
+<button id="order-toggle" class="fixed bottom-6 right-6 bg-yellow-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-yellow-500 transition z-50">
+  🛒 Hacer Pedido
+</button>
+
+<!-- Panel de pedidos -->
+<div id="order-panel" 
+     class="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center hidden z-50">
+  <div class="bg-white/80 w-11/12 max-w-4xl p-6 rounded-2xl shadow-xl relative flex gap-6">
+    <button id="close-panel" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 font-bold text-lg">&times;</button>
+
+    <!-- Columna derecha: pedidos activos -->
+<div class="w-120 flex flex-col max-h-[600px]">
+
+  <!-- 1️⃣ Header fijo -->
+  <div id="pedido-general" class="pb-2">
+    <h3 class="text-lg font-semibold">Sin Pedidos</h3>
+  </div>
+
+  <!-- 2️⃣ Contenido con scroll -->
+  <div
+    id="active-orders"
+    class="flex-1 overflow-y-auto space-y-2 py-2"
+  ></div>
+
+  <!-- 3️⃣ Footer fijo -->
+  <div
+    id="total-general"
+    class="text-right font-bold text-lg"
+  >
+    Total: $0.00
+  </div>
+
+</div>
+
+
+    <!-- Columna izquierda: info cliente -->
+    <div class="flex-1 flex flex-col gap-3">
+      <h2 class="text-2xl font-bold mb-2">Especificaciones del Pedido</h2>
+      <input type="text" id="name" placeholder="Nombre" class="w-full px-3 py-2 border rounded">
+      <input type="tel" id="phone" placeholder="Teléfono" class="w-full px-3 py-2 border rounded">
+      <div class="flex gap-2">
+        <input type="text" id="address" placeholder="Domicilio" class="flex-1 px-3 py-2 border rounded">
+        <button id="get-location" class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 text-sm">Compartir ubicación</button>
+      </div>
+      <textarea id="comments" placeholder="Comentarios del pedido" class="w-full px-3 py-2 border rounded"></textarea>
+      <button id="place-order" class="w-full bg-yellow-600 text-white py-3 rounded-lg hover:bg-yellow-500 transition-colors">
+        Confirmar Pedido
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+import { supabase } from "../../supabaseClient";
+
+// --- Variables globales ---
+let userPhone = '';
+const phoneToggleBtn = document.getElementById('phone-toggle');
+const phoneModal = document.getElementById('phone-modal');
+const phoneInputModal = document.getElementById('phone-input-modal');
+const phoneCancel = document.getElementById('phone-cancel');
+const phoneSubmit = document.getElementById('phone-submit');
+const orderToggle = document.getElementById('order-toggle');
+const orderPanel = document.getElementById('order-panel');
+const closePanel = document.getElementById('close-panel');
+const activeOrdersContainer = document.getElementById('active-orders');
+
+declare global {
+  interface Window {
+    loadActiveOrders: (phone: string) => Promise<void>;
+  }
+}
+
+window.loadActiveOrders = async function(phone: string) {
+  const container = document.getElementById('active-orders');
+  const totalDiv = document.getElementById('total-general');
+  const pedidoDiv = document.getElementById('pedido-general');
+  if(!container || !totalDiv) return;
+
+  container.innerHTML = '<p class="text-gray-500 text-sm">Cargando pedidos...</p>';
+  totalDiv.innerHTML = '';
+  if (pedidoDiv) pedidoDiv.innerHTML = '';
+
+  const { data: pedidos, error } = await supabase
+    .from('pedidos')
+    .select(`
+      fecha,
+      status,
+      numero_pedido,
+      pedido_detalle(
+        id,
+        cantidad,
+        precio_unitario,
+        producto(
+          nombre,
+          imagen
+        )
+      )
+    `)
+    .eq('telefono_cliente', phone)
+    .eq('status', 'activo');
+
+  if(error) {
+    container.innerHTML = '<p class="text-red-500">Error cargando pedidos.</p>';
+    console.error(error);
+    return;
+  }
+
+  if(!pedidos || pedidos.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 text-sm">No hay pedidos activos.</p>';
+    totalDiv.innerHTML = 'Total Pedido: $0';
+    if (pedidoDiv) pedidoDiv.innerHTML = 'Sin pedidos';
+    return;
+  }
+
+  container.innerHTML = '';
+  let totalPedidos = 0;
+  let pedido = 0;
+  let fecha = '';
+
+  pedidos.forEach(pedido => {
+    let totalPedido = 0;
+
+    const detalleHTML = pedido.pedido_detalle.map((item: any) => {
+      const subtotal = item.cantidad * item.precio_unitario;
+      totalPedido += subtotal;
+
+      return `
+       <div
+          id="detalle-${item.id}"
+          data-subtotal="${subtotal}"
+          class="flex items-center gap-3 py-2 transition-all duration-200 ease-in-out"
+        >
+          <img src="${item.producto.imagen || '/placeholder.png'}"
+              class="w-16 h-16 object-cover rounded-lg">
+
+          <div class="flex-1">
+            <div class="font-semibold">${item.producto.nombre}</div>
+            <div class="text-sm text-gray-500">Cantidad: ${item.cantidad}</div>
+          </div>
+
+          <div class="text-right flex flex-col items-end gap-1">
+            <div class="font-semibold">$${item.precio_unitario}</div>
+            <div class="text-gray-500 text-sm">Subtotal: $${subtotal}</div>
+
+            <button
+              class="text-red-500 text-xs hover:underline"
+              onclick="deleteDetalle(${item.id}, ${pedido.numero_pedido})"
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+
+      `;
+    }).join('');
+
+    totalPedidos += totalPedido;
+
+    const div = document.createElement('div');
+    div.className = 'rounded-xl p-4 shadow-lg mb-2 relative';
+    div.innerHTML = `
+      <div class="mb-2 flex items-center">
+      </div>
+      <div class="divide-y divide-gray-200">
+        ${detalleHTML}
+      </div>
+    `;
+    container.appendChild(div);
+    totalDiv.innerHTML = `<span class="font-bold text-lg">Total Pedido: $${totalPedidos}</span>`;
+    if (pedidoDiv) pedidoDiv.innerHTML = `<strong>Pedido #${pedido.numero_pedido}</strong> - ${new Date(pedido.fecha).toLocaleString()}`;
+  });
+}
+function actualizarTotalPedido(numeroPedido: number, subtotalRestar: number) {
+  const totalEl = document.getElementById(`total-pedido-${numeroPedido}`);
+  if (!totalEl) return;
+
+  const totalActual = Number(totalEl.innerText) || 0;
+  const nuevoTotal = Math.max(totalActual - subtotalRestar, 0);
+
+  totalEl.innerText = nuevoTotal.toFixed(2);
+}
+
+// --- Función para actualizar botón toggle ---
+function updatePhoneToggle() {
+  const savedPhone = localStorage.getItem('userPhone');
+
+  if(savedPhone) {
+    userPhone = savedPhone;
+    if(phoneToggleBtn) phoneToggleBtn.textContent = 'Salir';
+    // Cargar pedidos automáticamente
+    window.loadActiveOrders(userPhone);
+  } else {
+    userPhone = '';
+    if(phoneToggleBtn) phoneToggleBtn.textContent = 'Ingresar teléfono';
+    if(activeOrdersContainer) activeOrdersContainer.innerHTML = '<p class="text-gray-500 text-sm">No hay pedidos activos.</p>';
+  }
+}
+
+// --- Al cargar página ---
+window.addEventListener('DOMContentLoaded', updatePhoneToggle);
+
+// --- Click toggle ---
+phoneToggleBtn?.addEventListener('click', () => {
+  if(userPhone) {
+    // Salir
+    localStorage.removeItem('userPhone');
+    updatePhoneToggle();
+  } else {
+    // Abrir modal
+    phoneModal?.classList.remove('hidden');
+  }
+});
+
+// --- Modal cancelar ---
+phoneCancel?.addEventListener('click', () => {
+  phoneModal?.classList.add('hidden');
+});
+
+// --- Guardar teléfono desde modal ---
+phoneSubmit?.addEventListener('click', () => {
+  const phone = (phoneInputModal as HTMLInputElement).value.trim();
+  if(!phone) { alert("Ingresa un número de teléfono válido."); return; }
+  localStorage.setItem('userPhone', phone);
+  updatePhoneToggle();
+  phoneModal?.classList.add('hidden');
+});
+
+// --- Abrir panel de pedidos ---
+orderToggle?.addEventListener('click', () => {
+  if(!userPhone) { alert("Por favor ingresa tu teléfono primero."); return; }
+  orderPanel?.classList.remove('hidden');
+  window.loadActiveOrders(userPhone);
+});
+
+// --- Cerrar panel ---
+closePanel?.addEventListener('click', () => orderPanel?.classList.add('hidden'));
+
+// --- Geolocalización ---
+const getLocationBtn = document.getElementById('get-location');
+const addressInput = document.getElementById('address');
+if(getLocationBtn && addressInput) {
+  getLocationBtn.addEventListener('click', () => {
+    if(navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        const { latitude, longitude } = pos.coords;
+        (addressInput as HTMLInputElement).value = `Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
+      }, () => alert('No se pudo obtener la ubicación. Ingresa manualmente.'));
+    } else alert('Geolocalización no soportada.');
+  });
+}
+
+// --- Confirmar pedido ---
+const placeOrderBtn = document.getElementById('place-order');
+placeOrderBtn?.addEventListener('click', async () => {
+  const name = (document.getElementById('name') as HTMLInputElement).value.trim();
+  const phone = (document.getElementById('phone') as HTMLInputElement).value.trim();
+  const address = (document.getElementById('address') as HTMLInputElement).value.trim();
+  const comments = (document.getElementById('comments') as HTMLTextAreaElement).value.trim();
+
+  if(!userPhone) { alert("No hay teléfono definido."); return; }
+
+  try {
+    // Actualizar pedido activo más reciente con info del cliente y cerrar
+    const { data, error } = await supabase
+      .from('pedidos')
+      .update({
+        nombre_cliente: name || null,
+        celular: phone || null,
+        ubicacion: address || null,
+        comentarios: comments || null,
+        status: 'pendiente',
+      })
+      .eq('telefono_cliente', userPhone)
+      .eq('status', 'activo');
+
+    if(error) throw error;
+
+    // Limpiar campos y cerrar panel
+    (document.getElementById('name') as HTMLInputElement).value = '';
+    (document.getElementById('phone') as HTMLInputElement).value = '';
+    (document.getElementById('address') as HTMLInputElement).value = '';
+    (document.getElementById('comments') as HTMLTextAreaElement).value = '';
+    orderPanel?.classList.add('hidden');
+
+    // Recargar pedidos
+    window.loadActiveOrders(userPhone);
+
+    alert("Pedido confirmado y cerrado exitosamente!");
+  } catch(err) {
+    console.error(err);
+    alert("Error al confirmar pedido.");
+  }
+});
+async function deletePedido(pedidoId: number) {
+  const { data: detalles, error: errorDetalles } = await supabase
+    .from('pedido_detalle')
+    .delete()
+    .eq('id_pedido', pedidoId);
+
+  if (errorDetalles) {
+    console.error('Error al eliminar detalles:', errorDetalles);
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from('pedidos')
+    .delete()
+    .eq('numero_pedido', pedidoId);
+
+  if (error) {
+    console.error('Error al eliminar pedido:', error);
+  } else {
+    window.loadActiveOrders(userPhone); // refresca la lista
+  }
+}
+async function deleteDetalle(detalleId: number, numeroPedido: number) {
+  const detalleEl = document.getElementById(`detalle-${detalleId}`);
+  if (!detalleEl) return;
+
+  const subtotal = Number(detalleEl.dataset.subtotal) || 0;
+
+  const { error } = await supabase
+    .from('pedido_detalle')
+    .delete()
+    .eq('id', detalleId);
+
+  if (error) {
+    console.error('Error al eliminar detalle:', error);
+    return;
+  }
+
+  const { data: restantes, error: checkError } = await supabase
+    .from('pedido_detalle')
+    .select('id')
+    .eq('id_pedido', numeroPedido)
+    .limit(1);
+
+  if (checkError) {
+    console.error('Error al verificar detalles:', checkError);
+    return;
+  }
+
+  if (!restantes || restantes.length === 0) {
+    await supabase
+      .from('pedidos')
+      .delete()
+      .eq('numero_pedido', numeroPedido)
+      .eq('telefono_cliente', userPhone);
+  }
+
+  window.loadActiveOrders(userPhone);
+}
+
+// @ts-ignore
+window.deletePedido = deletePedido;
+// @ts-ignore
+window.deleteDetalle = deleteDetalle;
+
+</script>

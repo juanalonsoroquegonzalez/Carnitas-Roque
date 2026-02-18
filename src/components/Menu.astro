@@ -1,0 +1,287 @@
+<section class="bg-gray-100 py-12">
+  <div class="max-w-6xl mx-auto px-6">
+    <h2 class="text-3xl font-bold text-center mb-10">Nuestro Menú de Carnitas</h2>
+
+    <div class="grid md:grid-cols-3 gap-8">
+      <!-- Tarjeta 1 -->
+       <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition-transform duration-300 flex flex-col">
+          <img src="/receta.jpg" alt="Torta de carnitas" class="w-full h-64 object-cover">
+          <div class="p-6 flex flex-col flex-1">
+            <h3 class="text-xl font-semibold mb-2">Carnitas</h3>
+            <p class="text-gray-700 mb-4 flex-1">
+              Deliciosas carnitas y cueritos acompañadas de salsa de jitomate cruda y doraditas.
+            </p>
+            <span class="text-lg font-bold text-yellow-700 mb-4">$340 MXN / Kg</span>
+
+            <div class="mt-auto">
+              <div class="flex items-center gap-2 mb-2">
+                <button class="bg-gray-200 px-3 py-1 rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
+                <input type="text" value="0" class="w-12 text-center border-t border-b border-gray-200" readonly> 
+                <button class="bg-gray-200 px-3 py-1 rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
+              </div>
+
+              <button 
+                class="add-cart-btn bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors w-full"
+                data-id="1"
+                data-name="Carnitas"
+                data-price="340">
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 2 -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition-transform duration-300 flex flex-col">
+          <img src="/torta.jpg" alt="Torta de carnitas" class="w-full h-64 object-cover">
+          <div class="p-6 flex flex-col flex-1">
+            <h3 class="text-xl font-semibold mb-2">Torta de Carnitas</h3>
+            <p class="text-gray-700 mb-4 flex-1">
+              Bolillo salado para torta con carnitas, salsa de jitomate, cebolla curtida, salsa brava y doraditas.
+            </p>
+            <span class="text-lg font-bold text-yellow-700 mb-4">$55 MXN</span>
+
+            <div class="mt-auto">
+              <div class="flex items-center gap-2 mb-2">
+                <button class="bg-gray-200 px-3 py-1 rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
+                <input type="text" value="0" class="w-12 text-center border-t border-b border-gray-200" readonly> 
+                <button class="bg-gray-200 px-3 py-1 rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
+              </div>
+
+              <button 
+                class="add-cart-btn bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors w-full"
+                data-id="2"
+                data-name="Torta de Carnitas"
+                data-price="55">
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 3 -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition-transform duration-300 flex flex-col">
+          <img src="/Carnitas.jpg" alt="Tacos de carnitas" class="w-full h-64 object-cover">
+          <div class="p-6 flex flex-col flex-1">
+            <h3 class="text-xl font-semibold mb-2">Tacos de Carnitas</h3>
+            <p class="text-gray-700 mb-4 flex-1">
+              Tortilla de maiz de tamaño normal con carnitas con cebolla, cilantro, repollo, salsa de jitomate cruda, salsa picante de tomate y guacamole.
+            </p>
+            <span class="text-lg font-bold text-yellow-700 mb-4">$25 MXN</span>
+
+            <div class="mt-auto">
+              <div class="flex items-center gap-2 mb-2">
+                <button class="bg-gray-200 px-3 py-1 rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
+                <input type="text" value="0" class="w-12 text-center border-t border-b border-gray-200" readonly> 
+                <button class="bg-gray-200 px-3 py-1 rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
+              </div>
+
+              <button 
+                class="add-cart-btn bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors w-full"
+                data-id="3"
+                data-name="Tacos de Carnitas"
+                data-price="25">
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 4 -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition-transform duration-300 flex flex-col">
+          <img src="/botanero.jpg" alt="Tacos Dorados" class="w-full h-64 object-cover">
+          <div class="p-6 flex flex-col flex-1">
+            <h3 class="text-xl font-semibold mb-2">Tacos Dorados</h3>
+            <p class="text-gray-700 mb-4 flex-1">
+              Tortilla de maiz de tamaño normal con carnitas con cebolla, salsa de jitomate, cilantro, repollo, salsa de jitomate cruda, salsa picante de tomate y guacamole.
+            </p>
+            <span class="text-lg font-bold text-yellow-700 mb-4">$9 MXN</span>
+
+            <div class="mt-auto">
+              <div class="flex items-center gap-2 mb-2">
+                <button class="bg-gray-200 px-3 py-1 rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
+                <input type="text" value="0" class="w-12 text-center border-t border-b border-gray-200" readonly> 
+                <button class="bg-gray-200 px-3 py-1 rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
+              </div>
+
+              <button 
+                class="add-cart-btn bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors w-full"
+                data-id="4"
+                data-name="Tacos Dorados"
+                data-price="9">
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta 5 -->
+        <div class="bg-white rounded-2xl shadow-lg overflow-hidden hover:scale-105 transition-transform duration-300 flex flex-col">
+          <img src="/dael.jpg" alt="Tacos Dorados con Carnitas" class="w-full h-64 object-cover">
+          <div class="p-6 flex flex-col flex-1">
+            <h3 class="text-xl font-semibold mb-2">Tacos Dorados con Carnitas</h3>
+            <p class="text-gray-700 mb-4 flex-1">
+              Tortilla de maiz de tamaño normal con carnitas con cebolla, salsa de jitomate, cilantro, repollo, salsa de jitomate cruda, salsa picante de tomate y guacamole.
+            </p>
+            <span class="text-lg font-bold text-yellow-700 mb-4">$22 MXN</span>
+
+            <div class="mt-auto">
+              <div class="flex items-center gap-2 mb-2">
+                <button class="bg-gray-200 px-3 py-1 rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
+                <input type="text" value="0" class="w-12 text-center border-t border-b border-gray-200" readonly> 
+                <button class="bg-gray-200 px-3 py-1 rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
+              </div>
+
+              <button 
+                class="add-cart-btn bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors w-full"
+                data-id="5"
+                data-name="Tacos Dorados con Carnitas"
+                data-price="22">
+                Agregar al carrito
+              </button>
+            </div>
+          </div>
+        </div>
+
+    </div>
+  </div>
+</section>
+
+<script>
+import { supabase } from "../../supabaseClient";
+declare global {
+  interface Window {
+    userPhone?: string;
+    pendingProduct?: Product;
+  }
+}
+type Product = {
+  id: number;
+  name: string;
+  price: number;
+  qty: number;
+};
+
+const cart: Product[] = [];
+(window as any).cart = cart;
+(window as any).pendingProduct = null;
+
+// Función para actualizar contador
+(window as any).updateQty = function(button: HTMLButtonElement, delta: number) {
+  const input = button.parentElement?.querySelector('input') as HTMLInputElement | null;
+  if (!input) return;
+
+  let value = parseInt(input.value);
+  value += delta;
+  if (value < 0) value = 0;
+  input.value = value.toString();
+}
+
+// Función para agregar al carrito y guardar en Supabase
+async function addToCartAndDB(product: Product) {
+  if (product.qty <= 0) {
+    alert('Selecciona al menos 1 unidad');
+    return;
+  }
+
+  // Actualizar carrito local
+  const existing = cart.find(item => item.id === product.id);
+  if (existing) existing.qty += product.qty;
+  else cart.push({ ...product });
+
+  try {
+    // Buscar pedido activo
+    let { data: pedido, error } = await supabase
+      .from('pedidos')
+      .select('numero_pedido')
+      .eq('telefono_cliente', window.userPhone)
+      .eq('status', 'activo')
+      .maybeSingle();
+
+    let pedidoId: number;
+    if (pedido) {
+      pedidoId = pedido.numero_pedido;
+    } else {
+      // Crear nuevo pedido
+      if (!window.userPhone) throw new Error('Phone number is required');
+      const newPedido = await crearPedido(window.userPhone);
+      pedidoId = newPedido.numero_pedido;
+    }
+    
+
+    // Insertar detalle de pedido
+    const { data: detalle, error: errDetalle } = await supabase
+      .from('pedido_detalle')
+      .insert({
+        telefono_cliente: window.userPhone,
+        id_pedido: pedidoId,
+        producto: product.id,
+        precio_unitario: product.price,
+        cantidad: product.qty
+      });
+
+    if (errDetalle) throw errDetalle;
+
+  } catch (err) {
+    console.error('Error al guardar en la base de datos:', err);
+  }
+}
+async function crearPedido(telefono: string) {
+      const numeroPedido = await getNextNumeroPedido(telefono);
+
+      const { data, error } = await supabase
+        .from('pedidos')
+        .insert({
+          telefono_cliente: telefono,
+          numero_pedido: numeroPedido,
+          total: 0,
+          status: 'activo'
+        })
+        .select('id, numero_pedido')
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+
+    async function getNextNumeroPedido(telefono: string) {
+      const { data, error } = await supabase
+        .from('pedidos')
+        .select('numero_pedido')
+        .eq('telefono_cliente', telefono)
+        .order('numero_pedido', { ascending: false })
+        .maybeSingle();
+
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+
+      return data ? data.numero_pedido + 1 : 1;
+    }
+
+document.querySelectorAll('.add-cart-btn').forEach((btn) => {
+  const button = btn as HTMLButtonElement;
+  button.addEventListener('click', () => {
+    const input = button.parentElement?.querySelector('input') as HTMLInputElement;
+    const qty = input ? parseInt(input.value) : 1;
+
+    const product: Product = {
+      id: parseInt(button.dataset.id!),
+      name: button.dataset.name!,
+      price: parseFloat(button.dataset.price!),
+      qty
+    };
+
+    if (!window.userPhone) {
+      alert('Ingresa con tu número de teléfono');
+      return;
+    }
+
+    addToCartAndDB(product);
+    const qtyInput = button.parentElement?.querySelector('input[type="text"]') as HTMLInputElement;
+    if(!qtyInput) return;
+    qtyInput.value = '0';
+  });
+});
+
+</script>

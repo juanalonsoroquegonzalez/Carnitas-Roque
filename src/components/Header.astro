@@ -1,0 +1,124 @@
+<header class="py-6 px-6 flex justify-between items-center bg-white shadow-md">
+  <h1 class="text-3xl font-bold bg-gradient-to-r from-red-500 to-orange-500 
+             dark:from-orange-700 dark:to-red-600 bg-clip-text text-transparent">
+    Carnitas Roque
+  </h1>
+
+  <!-- Botón de ingresar teléfono o salir -->
+  <div id="phone-toggle-container">
+    <button id="phone-toggle" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-500 transition">
+      Ingresar teléfono
+    </button>
+  </div>
+</header>
+
+<!-- Modal de ingreso de teléfono -->
+<div id="phone-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center hidden z-50">
+  <div class="bg-white rounded-xl p-6 w-80 shadow-lg">
+    <h3 class="text-lg font-semibold mb-4">Ingresa tu número de teléfono</h3>
+    <input type="text" id="phone-input-modal" placeholder="55 1234 5678" class="w-full border px-3 py-2 rounded mb-4">
+    <div class="flex justify-end gap-2">
+      <button id="phone-cancel" class="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 transition">Cancelar</button>
+      <button id="phone-submit" class="px-4 py-2 rounded bg-yellow-600 text-white hover:bg-yellow-500 transition">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { supabase } from '../supabaseClient.ts';
+let userPhone = '';
+
+// Elementos
+const phoneToggleContainer = document.getElementById('phone-toggle-container');
+const phoneToggleBtn = document.getElementById('phone-toggle');
+const phoneModal = document.getElementById('phone-modal');
+const phoneInputModal = document.getElementById('phone-input-modal');
+const phoneCancel = document.getElementById('phone-cancel');
+const phoneSubmit = document.getElementById('phone-submit');
+
+// === Función para actualizar botón según estado del teléfono ===
+function updatePhoneToggle() {
+  const savedPhone = localStorage.getItem('userPhone');
+  if (savedPhone) {
+    userPhone = savedPhone;
+    phoneToggleBtn.textContent = 'Salir';
+  } else {
+    userPhone = '';
+    phoneToggleBtn.textContent = 'Ingresar teléfono';
+  }
+}
+
+// === Al cargar la página, revisar si hay teléfono guardado ===
+window.addEventListener('DOMContentLoaded', () => {
+  updatePhoneToggle();
+
+  if (userPhone) {
+    loadActiveOrders(userPhone); // Cargar pedidos activos automáticamente
+  }
+});
+
+// === Click en toggle ===
+phoneToggleBtn.addEventListener('click', () => {
+  if (userPhone) {
+    // Si ya hay teléfono -> salir
+    localStorage.removeItem('userPhone');
+    userPhone = '';
+    updatePhoneToggle();
+  } else {
+    // Abrir modal para ingresar teléfono
+    if(phoneModal) phoneModal.classList.remove('hidden');
+  }
+});
+
+// === Cancelar modal ===
+phoneCancel.addEventListener('click', () => {
+  if(phoneModal) phoneModal.classList.add('hidden');
+});
+
+// === Guardar teléfono desde modal ===
+phoneSubmit.addEventListener('click', async () => {
+  const phone = phoneInputModal.value.trim();
+
+  if (!phone) {
+    alert("Ingresa un número de teléfono válido.");
+    return;
+  }
+
+ try {
+     const { data: cliente, error: selectError } = await supabase
+        .from('clientes')
+        .select('telefono')
+        .eq('telefono', phone)
+        .maybeSingle();
+
+      if (selectError) {
+        console.error('Error al verificar cliente:', selectError);
+        return;
+      }
+
+      if (!cliente) {
+        const { error: insertError } = await supabase
+          .from('clientes')
+          .insert({
+            telefono: phone
+          });
+
+        if (insertError) {
+          console.error('Error al crear cliente:', insertError);
+        }
+      }
+
+    localStorage.setItem('userPhone', phone);
+    userPhone = phone;
+
+    updatePhoneToggle();
+    if (phoneModal) phoneModal.classList.add('hidden');
+
+    loadActiveOrders(phone);
+
+  } catch (err) {
+    console.error('Error inesperado:', err);
+  }
+});
+
+</script>
