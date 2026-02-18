@@ -105,8 +105,9 @@
 </div>
 
 <script>
-import { supabase } from "../../supabaseClient";
+import { getSupabaseClient } from '../lib/supabaseClient';
 
+const supabase = getSupabaseClient();
 // --- Variables globales ---
 let userPhone = '';
 const phoneToggleBtn = document.getElementById('phone-toggle');

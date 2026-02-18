@@ -148,7 +148,9 @@
 </section>
 
 <script>
-import { supabase } from "../../supabaseClient";
+import { getSupabaseClient } from '../lib/supabaseClient';
+
+const supabase = getSupabaseClient();
 declare global {
   interface Window {
     userPhone?: string;

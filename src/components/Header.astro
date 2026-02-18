@@ -24,8 +24,10 @@
   </div>
 </div>
 
-<script type="module">
-import { supabase } from '../supabaseClient.ts';
+<script>
+  import { getSupabaseClient } from '../lib/supabaseClient';
+
+  const supabase = getSupabaseClient();
 let userPhone = '';
 
 // Elementos
@@ -41,24 +43,20 @@ function updatePhoneToggle() {
   const savedPhone = localStorage.getItem('userPhone');
   if (savedPhone) {
     userPhone = savedPhone;
-    phoneToggleBtn.textContent = 'Salir';
+    if (phoneToggleBtn) phoneToggleBtn.textContent = 'Salir';
   } else {
     userPhone = '';
-    phoneToggleBtn.textContent = 'Ingresar teléfono';
+    if (phoneToggleBtn) phoneToggleBtn.textContent = 'Ingresar teléfono';
   }
 }
 
 // === Al cargar la página, revisar si hay teléfono guardado ===
 window.addEventListener('DOMContentLoaded', () => {
   updatePhoneToggle();
-
-  if (userPhone) {
-    loadActiveOrders(userPhone); // Cargar pedidos activos automáticamente
-  }
 });
 
 // === Click en toggle ===
-phoneToggleBtn.addEventListener('click', () => {
+phoneToggleBtn?.addEventListener('click', () => {
   if (userPhone) {
     // Si ya hay teléfono -> salir
     localStorage.removeItem('userPhone');
@@ -71,13 +69,13 @@ phoneToggleBtn.addEventListener('click', () => {
 });
 
 // === Cancelar modal ===
-phoneCancel.addEventListener('click', () => {
+phoneCancel?.addEventListener('click', () => {
   if(phoneModal) phoneModal.classList.add('hidden');
 });
 
 // === Guardar teléfono desde modal ===
-phoneSubmit.addEventListener('click', async () => {
-  const phone = phoneInputModal.value.trim();
+phoneSubmit?.addEventListener('click', async () => {
+  const phone = (phoneInputModal as HTMLInputElement)?.value.trim();
 
   if (!phone) {
     alert("Ingresa un número de teléfono válido.");
@@ -113,8 +111,6 @@ phoneSubmit.addEventListener('click', async () => {
 
     updatePhoneToggle();
     if (phoneModal) phoneModal.classList.add('hidden');
-
-    loadActiveOrders(phone);
 
   } catch (err) {
     console.error('Error inesperado:', err);
