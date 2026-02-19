@@ -1,0 +1,223 @@
+---
+// Plato.astro
+// Props opcionales para inicializar con productos
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  type?: string;
+}
+
+const { products = [] } = Astro.props as { products?: Product[] };
+---
+<div class="plato-container p-4 bg-gray-50 rounded-xl shadow-md">
+  <h2 class="text-xl font-bold mb-4">Mi Plato</h2>
+
+  <div id="plate-items" class="space-y-2">
+    {products.length === 0 ? (
+      <p class="text-gray-500 text-sm">No hay productos en tu plato.</p>
+    ) : (
+      products.map(product => (
+        <div
+          id={`plate-item-${product.id}`}
+          class="flex justify-between items-center bg-white p-3 rounded-lg shadow-sm"
+        >
+          <div>
+            <p class="font-semibold">{product.name} {product.type ? `- ${product.type}` : ''}</p>
+            <p class="text-gray-500 text-sm">Cantidad: {product.quantity}</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="font-bold">${product.price * product.quantity}</span>
+            <button
+              class="text-red-500 hover:underline text-sm"
+              onclick={`removeFromPlate(${product.id})`}
+            >
+              Eliminar
+            </button>
+          </div>
+        </div>
+      ))
+    )}
+  </div>
+
+  <div class="mt-4 text-right font-bold text-lg" id="plate-total">
+    Total: ${products.reduce((sum, p) => sum + p.price * p.quantity, 0)}
+  </div>
+
+    <button
+      id="add-plate-to-cart"
+      class="mt-4 w-3/4 btn-primary block mx-auto text-xs"
+      onclick="addPlateToCart()"
+    >
+      Add Carrito
+    </button>
+</div>
+
+
+<script>
+
+import { getSupabaseClient } from '../lib/supabaseClient';
+
+const supabase = getSupabaseClient();
+window.addEventListener('DOMContentLoaded', () => {
+  const savedPhone = localStorage.getItem('userPhone');
+  if (savedPhone) {
+    window.userPhone = savedPhone;
+    window.loadPlate(window.userPhone);
+  }
+});
+// Lista global de plato
+let plate: PlateProduct[] = [];
+
+window.loadPlate = async function(userPhone: string) {
+  // Limpiar el arreglo actual
+  plate = [];
+
+  // 1️⃣ Traer los platos activos del usuario
+  const { data: platos, error: platosError } = await supabase
+    .from('plato')
+    .select('id')
+    .eq('telefono_cliente', userPhone)
+    .eq('status', 'activo')
+    .order('fecha', { ascending: false })
+    .limit(1); // Solo el plato más reciente
+
+  if (platosError) {
+    console.error('Error al obtener plato:', platosError);
+    return;
+  }
+
+  if (!platos || platos.length === 0) {
+    window.renderPlate(); // Plato vacío
+    return;
+  }
+
+  const platoId = platos[0].id;
+
+    // 2️⃣ Traer los detalles del plato
+    const { data: detalles, error: detallesError } = await supabase
+    .from('plato_detalle')
+    .select(`
+      id,
+      cantidad,
+      precio_unitario,
+      tipo,
+      modo,
+      producto:id_producto (
+        nombre,
+        imagen
+      )
+    `)
+    .eq('id_plato', platoId);
+
+
+  if (detallesError) {
+    console.error('Error al obtener detalles del plato:', detallesError);
+    return;
+  }
+
+  if (!detalles || detalles.length === 0) {
+    window.renderPlate(); // Plato vacío
+    return;
+  }
+
+  // 3️⃣ Llenar el arreglo `plate`
+  detalles.forEach((d: any) => {
+    plate.push({
+      id: d.id,
+      name: d.producto.nombre,
+      type: d.tipo,
+      price: d.precio_unitario,
+      quantity: d.cantidad
+    });
+  });
+
+  // 4️⃣ Renderizar
+  window.renderPlate();
+}
+
+window.renderPlate = async function() {
+  const container = document.getElementById('plate-items')!;
+  const totalDiv = document.getElementById('plate-total')!;
+
+  // Limpiar contenedor
+  container.innerHTML = '';
+
+  if (plate.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 text-sm">No hay productos en tu plato.</p>';
+    totalDiv.textContent = 'Total: $0';
+    return;
+  }
+
+  // Crear cada producto en la UI
+  plate.forEach(p => {
+    const div = document.createElement('div');
+    div.id = `plate-item-${p.id}`;
+    div.className = 'flex justify-between items-center bg-white p-3 rounded-lg shadow-sm';
+
+    div.innerHTML = `
+      <div>
+        <p class="font-semibold text-xs">${p.name}${p.type ? ` - ${p.type}` : ''}</p>
+        <p class="text-gray-500 text-xs">Cantidad: ${p.quantity}</p>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-xs">$${p.price * p.quantity}</span>
+        <button class="text-red-500 hover:underline text-xs" onclick="removeFromPlate(${p.id})">
+          Eliminar
+        </button>
+      </div>
+    `;
+    container.appendChild(div);
+  });
+
+  // Calcular total del plato
+  const total = plate.reduce((sum, p) => sum + p.price * p.quantity, 0);
+  totalDiv.textContent = `Total: $${total}`;
+}
+interface PlateProduct {
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+  type?: string;
+}
+declare global {
+  interface Window {
+    renderPlate: () => Promise<void>;
+    loadPlate: (userPhone: string) => Promise<void>;
+    removeFromPlate: (detalleId: number) => Promise<void>;
+  }
+}
+
+window.removeFromPlate = async function(detalleId: number) {
+  try {
+    if (!window.userPhone) return;
+
+    const { data: platos } = await supabase
+      .from('plato')
+      .select('id')
+      .eq('telefono_cliente', window.userPhone)
+      .eq('status', 'activo')
+      .order('fecha', { ascending: false })
+      .limit(1);
+
+    if (!platos || platos.length === 0) return;
+
+    const platoId = platos[0].id;
+
+    await supabase
+      .from('plato_detalle')
+      .delete()
+      .eq('id', detalleId)
+      .eq('id_plato', platoId);
+
+    plate = plate.filter(p => p.id !== detalleId);
+    window.renderPlate();
+  } catch (err) {
+    console.error('Error eliminando producto del plato:', err);
+  }
+};
+
+
+</script>
