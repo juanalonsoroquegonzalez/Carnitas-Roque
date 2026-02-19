@@ -1,14 +1,40 @@
-<header class="py-6 px-6 flex justify-between items-center bg-white shadow-md">
-  <h1 class="text-3xl font-bold bg-gradient-to-r from-red-500 to-orange-500 
-             dark:from-orange-700 dark:to-red-600 bg-clip-text text-transparent">
-    Carnitas Roque
-  </h1>
+<header
+  id="main-header"
+  class="fixed top-0 w-full z-50
+         bg-white/80 backdrop-blur-md
+         backdrop-blur-md
+         border-b border-gray-200
+         transition-all duration-300"
+>
+  <div
+    id="header-inner"
+    class="relative max-w-7xl mx-auto
+           transition-all duration-300"
+  >
+    <!-- LOGO -->
+    <h1
+      id="logo"
+      class="absolute left-1/2 -translate-x-1/2
+             text-4xl md:text-5xl font-bold text-center
+             bg-gradient-to-r from-red-600 to-orange-600
+             bg-clip-text text-transparent
+             transition-all duration-300"
+    >
+      Carnitas <span class="font-extrabold">Roque</span>
+    </h1>
 
-  <!-- Botón de ingresar teléfono o salir -->
-  <div id="phone-toggle-container">
-    <button id="phone-toggle" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-500 transition">
-      Ingresar teléfono
-    </button>
+    <!-- BOTÓN -->
+    <div class="flex justify-end">
+      <button
+        id="phone-toggle"
+        class="px-6 py-3 text-lg
+               bg-gradient-to-r from-yellow-500 to-orange-500
+               text-white rounded-lg
+               transition-all duration-300"
+      >
+        Ingresar teléfono
+      </button>
+    </div>
   </div>
 </header>
 
@@ -25,6 +51,30 @@
 </div>
 
 <script>
+    const header = document.getElementById('main-header');
+  const logo = document.getElementById('logo');
+  const button = document.getElementById('phone-toggle');
+
+  function handleScroll() {
+    const isTop = window.scrollY === 0;
+
+    header?.classList.toggle('py-10', isTop);
+    header?.classList.toggle('py-3', !isTop);
+
+    logo?.classList.toggle('text-5xl', isTop);
+    logo?.classList.toggle('text-2xl', !isTop);
+
+    button?.classList.toggle('px-6', isTop);
+    button?.classList.toggle('py-3', isTop);
+    button?.classList.toggle('text-lg', isTop);
+
+    button?.classList.toggle('px-4', !isTop);
+    button?.classList.toggle('py-2', !isTop);
+    button?.classList.toggle('text-sm', !isTop);
+  }
+
+  window.addEventListener('load', handleScroll);
+  window.addEventListener('scroll', handleScroll);
   import { getSupabaseClient } from '../lib/supabaseClient';
 
   const supabase = getSupabaseClient();
