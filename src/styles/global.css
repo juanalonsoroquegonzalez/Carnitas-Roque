@@ -17,3 +17,18 @@ body {
               color 0.2s ease,
               transform 0.2s ease;
 }
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 rounded-lg
+           bg-gradient-to-r from-yellow-500 to-orange-500
+           text-white font-medium
+           hover:from-yellow-600 hover:to-orange-600
+           transition-all duration-300
+           shadow-md hover:shadow-lg
+           active:scale-95
+           focus:outline-none
+           focus:ring-2 focus:ring-yellow-400
+           focus:ring-offset-2;
+  }
+}

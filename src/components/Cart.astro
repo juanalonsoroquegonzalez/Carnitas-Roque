@@ -10,9 +10,21 @@
 </div>
 
 <!-- Carrito flotante -->
-<button id="order-toggle" class="fixed bottom-6 right-6 bg-yellow-600 text-white px-4 py-3 rounded-full shadow-lg hover:bg-yellow-500 transition z-50">
+<button
+  id="order-toggle"
+  class="fixed bottom-6 right-6 z-50
+         px-5 py-3 rounded-full
+         bg-gradient-to-r from-yellow-500 to-orange-500
+         text-white font-medium
+         shadow-lg
+         hover:from-yellow-600 hover:to-orange-600
+         hover:shadow-xl
+         transition-all duration-300
+         active:scale-95"
+>
   🛒 Hacer Pedido
 </button>
+
 <!-- Panel de pedidos -->
 <div
   id="order-panel"
