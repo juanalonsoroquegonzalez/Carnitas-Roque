@@ -168,6 +168,11 @@ const cart: Product[] = [];
 (window as any).cart = cart;
 (window as any).pendingProduct = null;
 
+const savedPhone = localStorage.getItem('userPhone');
+if (savedPhone) {
+  window.userPhone = savedPhone;
+}
+
 // Función para actualizar contador
 (window as any).updateQty = function(button: HTMLButtonElement, delta: number) {
   const input = button.parentElement?.querySelector('input') as HTMLInputElement | null;
