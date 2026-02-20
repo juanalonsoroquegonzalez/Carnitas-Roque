@@ -31,7 +31,7 @@ import Plato from "../components/Plat.astro";
     0
   </span>
 </button>
-
+<!--
 <button
   id="toggle-plato"
   class="fixed bottom-20 right-6 z-50 px-5 py-3 bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition"
@@ -51,6 +51,7 @@ import Plato from "../components/Plat.astro";
 >
   <Plato />
 </div>
+-->
 <!-- Panel de pedidos -->
 <div
   id="order-panel"
@@ -130,13 +131,13 @@ import Plato from "../components/Plat.astro";
         class="w-full px-3 py-2 border rounded"
       ></textarea>
       <button
-  id="whatsapp-order"
-  class="w-full bg-green-600 text-white py-3 rounded-lg
-         hover:bg-green-500 transition-colors
-         flex items-center justify-center gap-2"
->
-  📲 Pedir por WhatsApp
-</button>
+        id="whatsapp-order"
+        class="w-full bg-green-600 text-white py-3 rounded-lg
+              hover:bg-green-500 transition-colors
+              flex items-center justify-center gap-2"
+      >
+        📲 Pedir por WhatsApp
+      </button>
     </div>
   </div>
 </div>
@@ -253,12 +254,12 @@ document.getElementById('whatsapp-order')?.addEventListener('click', () => {
   const address = (document.getElementById('address') as HTMLInputElement)?.value;
   const comments = (document.getElementById('comments') as HTMLTextAreaElement)?.value;
 
-  let msg = `🛒 *Nuevo pedido*\n\n`;
+  let msg = `*Nuevo pedido*\n\n`;
 
-  if (name) msg += `👤 ${name}\n`;
-  if (phone) msg += `📞 ${phone}\n`;
-  if (address) msg += `📍 ${address}\n`;
-  if (comments) msg += `💬 ${comments}\n`;
+  if (name) msg += `${name}\n`;      
+  if (phone) msg += `${phone}\n`;    
+  if (address) msg += `${address}\n`; 
+  if (comments) msg += `${comments}\n`;
 
   msg += `\n*Pedido:*\n`;
 
@@ -266,17 +267,31 @@ document.getElementById('whatsapp-order')?.addEventListener('click', () => {
 
   pedido.pedido_detalle.forEach((item, i) => {
     const sub = item.precio_unitario * item.cantidad;
-    total += sub;
-    msg += `${i + 1}. ${item.producto.nombre} x${item.cantidad}${item.unidad || ''} → $${sub.toFixed(2)}\n`;
+    
+    if(item.modo === 'pesos' || item.modo === 'gramos'){
+      total += Number(item.precio_unitario);
+      msg += `${i + 1}. ${item.producto.nombre} (${item.cantidad} ${item.unidad || ''}) → $${Number(item.precio_unitario).toFixed(2)}\n`;
+    }
+    else{
+      total += sub;
+      msg += `${i + 1}. ${item.producto.nombre} x ${item.cantidad} ${item.unidad || ''} → $${sub.toFixed(2)}\n`;
+    }
+    
   });
 
-  msg += `\n💰 *Total: $${total.toFixed(2)}*`;
+  msg += `\n*Total: $${total.toFixed(2)}*`;
 
   const businessPhone = '523751384779';
   window.open(
     `https://wa.me/${businessPhone}?text=${encodeURIComponent(msg)}`,
     '_blank'
   );
+
+  window.activePedido = undefined;
+
+  // Actualizar UI
+  renderCart();
+  window.updateCartCount();
 });
 /* =====================
    GEOLOCALIZACION
