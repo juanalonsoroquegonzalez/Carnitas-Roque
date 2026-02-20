@@ -12,7 +12,6 @@ import Plato from "../components/Plat.astro";
   </div>
 </div>
 
-<!-- Carrito flotante -->
 <button
   id="order-toggle"
   class="fixed bottom-6 right-6 z-50
@@ -26,7 +25,14 @@ import Plato from "../components/Plat.astro";
          active:scale-95"
 >
   🛒 Hacer Pedido
+  <span
+    id="cart-count"
+    class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full"
+  >
+    0
+  </span>
 </button>
+
 <button
   id="toggle-plato"
   class="fixed bottom-20 right-6 z-50 px-5 py-3 bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition"
@@ -68,7 +74,7 @@ import Plato from "../components/Plat.astro";
 
       <!-- Header fijo -->
       <div id="pedido-general" class="pb-2">
-        <h3 class="text-lg font-semibold">Sin Pedidos</h3>
+        <h3 class="text-lg font-semibold">Pedidos</h3>
       </div>
 
       <!-- Scroll SOLO aquí -->
@@ -124,475 +130,184 @@ import Plato from "../components/Plat.astro";
         placeholder="Comentarios del pedido"
         class="w-full px-3 py-2 border rounded"
       ></textarea>
-
       <button
-        id="place-order"
-        class="w-full bg-yellow-600 text-white py-3 rounded-lg hover:bg-yellow-500 transition-colors"
-      >
-        Confirmar Pedido
-      </button>
+  id="whatsapp-order"
+  class="w-full bg-green-600 text-white py-3 rounded-lg
+         hover:bg-green-500 transition-colors
+         flex items-center justify-center gap-2"
+>
+  📲 Pedir por WhatsApp
+</button>
     </div>
   </div>
 </div>
 
 </div>
-
 <script>
-import { getSupabaseClient } from '../lib/supabaseClient';
-
-const supabase = getSupabaseClient();
-// --- Variables globales ---
-let userPhone = '';
-const phoneToggleBtn = document.getElementById('phone-toggle');
-const phoneModal = document.getElementById('phone-modal');
-const phoneInputModal = document.getElementById('phone-input-modal');
-const phoneCancel = document.getElementById('phone-cancel');
-const phoneSubmit = document.getElementById('phone-submit');
-const orderToggle = document.getElementById('order-toggle');
-const orderPanel = document.getElementById('order-panel');
-const closePanel = document.getElementById('close-panel');
-const activeOrdersContainer = document.getElementById('active-orders');
-
-const toggleBtn = document.getElementById("toggle-plato");
-  const plate = document.getElementById("plate-container");
-
-  toggleBtn?.addEventListener("click", () => {
-    plate?.classList.toggle("scale-0");
-    plate?.classList.toggle("opacity-0");
-    plate?.classList.toggle("pointer-events-none");
-
-
-    
-  });
+/* =====================
+   ESTADO GLOBAL
+===================== */
 
 declare global {
   interface Window {
-    loadActiveOrders: (phone: string) => Promise<void>;
+    cart: any[];
+    userPhone?: string;
+    updateCartCount: () => void;
   }
 }
 
-window.loadActiveOrders = async function(phone: string) {
-  const container = document.getElementById('active-orders');
-  const totalDiv = document.getElementById('total-general');
-  const pedidoDiv = document.getElementById('pedido-general');
-  if(!container || !totalDiv) return;
+window.cart = [];
 
-  container.innerHTML = '<p class="text-gray-500 text-sm">Cargando pedidos...</p>';
-  totalDiv.innerHTML = '';
-  if (pedidoDiv) pedidoDiv.innerHTML = '';
+/* =====================
+   ELEMENTOS UI
+===================== */
 
-  const { data: pedidos, error } = await supabase
-    .from('pedidos')
-    .select(`
-      fecha,
-      status,
-      numero_pedido,
-      pedido_detalle(
-        id,
-        cantidad,
-        precio_unitario,
-        tipo,
-        unidad,
-        modo,
-        plato,
-        producto(
-          nombre,
-          imagen
-        )
-      )
-    `)
-    .eq('telefono_cliente', phone)
-    .eq('status', 'activo')
-    // Ordenar pedidos del más reciente al más antiguo
-    .order('fecha', { ascending: false })
-    // Ordenar detalles por ID descendente
-    .order('id', { 
-      foreignTable: 'pedido_detalle', 
-      ascending: false 
-    });
+const phoneToggleBtn = document.getElementById('phone-toggle');
+const phoneModal = document.getElementById('phone-modal');
+const phoneInputModal = document.getElementById('phone-input-modal') as HTMLInputElement;
+const phoneCancel = document.getElementById('phone-cancel');
+const phoneSubmit = document.getElementById('phone-submit');
 
-  if(error) {
-    container.innerHTML = '<p class="text-red-500">Error cargando pedidos.</p>';
-    console.error(error);
+const orderToggle = document.getElementById('order-toggle');
+const orderPanel = document.getElementById('order-panel');
+const closePanel = document.getElementById('close-panel');
+
+const activeOrdersContainer = document.getElementById('active-orders');
+const totalDiv = document.getElementById('total-general');
+
+/* =====================
+   PANEL PEDIDOS
+===================== */
+
+orderToggle?.addEventListener('click', () => {
+  orderPanel?.classList.remove('hidden');
+  renderCart();
+});
+
+closePanel?.addEventListener('click', () => {
+  orderPanel?.classList.add('hidden');
+});
+
+/* =====================
+   RENDER CARRITO
+===================== */
+function renderCart() {
+  if (!activeOrdersContainer || !totalDiv) return;
+
+  const pedido = window.getOrCreatePedido();
+
+  if (pedido.pedido_detalle.length === 0) {
+    activeOrdersContainer.innerHTML =
+      '<p class="text-gray-500 text-sm">Carrito vacío</p>';
+    totalDiv.textContent = 'Total: $0';
     return;
   }
 
-  if(!pedidos || pedidos.length === 0) {
-    container.innerHTML = '<p class="text-gray-500 text-sm">No hay pedidos activos.</p>';
-    totalDiv.innerHTML = 'Total Pedido: $0';
-    if (pedidoDiv) pedidoDiv.innerHTML = 'Sin pedidos';
-    return;
-  }
+  let total = 0;
 
-  container.innerHTML = '';
-  let totalPedidos = 0;
+  activeOrdersContainer.innerHTML = (pedido.pedido_detalle as any[])
+    .map((item: any) => {
+      let sub = 0;
+      
+      if (item.modo === 'pesos' || item.modo === 'gramos') {
+        sub = Number(item.precio_unitario);
+      } else {
+        const cantidad = Number(item.cantidad);
+        const precio = Number(item.precio_unitario);
+        sub = cantidad * precio;
+      }
 
-  let totalPlatos = pedidos
-    .flatMap(p => p.pedido_detalle)
-    .filter((d: any) => d.producto?.nombre === 'Plato')
-    .length;
-
-  pedidos.forEach(pedido => {
-    let totalPedido = 0;
-
-    const detalleHTML = pedido.pedido_detalle.map((item: any) => {
-      let subtotal = item.cantidad * item.precio_unitario;
-      let unit;
-      let sub
-      if(item.modo === 'gramos'){
-        sub = item.precio_unitario;
-        unit = '340';
-        totalPedido += sub;
-      }
-      else if(item.modo === 'pesos'){
-        unit = '340';
-        sub = item.precio_unitario;
-        totalPedido += sub;
-      }
-      else{
-        sub = subtotal;
-        unit = item.precio_unitario;
-        totalPedido += sub;
-      }
-      if (item.producto.nombre === 'Plato') {
-        item.producto.nombre = `Plato #${totalPlatos}`;
-        totalPlatos--;
-      }
+      total += sub;
       return `
-       <div
-          id="detalle-${item.id}"
-          data-subtotal="${subtotal}"
-          class="flex items-center gap-3 py-2 transition-all duration-200 ease-in-out"
-        >
-          <img src="${item.producto.imagen || '/placeholder.png'}"
-              class="w-16 h-16 object-cover rounded-lg">
-
-          <div class="flex-1">
-            <div class="font-semibold">${item.producto.nombre}</div>
-           ${item.producto.nombre.startsWith('Plato')
-            ? `
-              <div class="plato-wrapper relative mt-1" data-plato-id="${item.plato}">
-                <button
-                  class="toggle-plato-detalle text-sm text-blue-600 hover:underline"
-                  data-plato-id="${item.plato}"
-                >
-                  Ver detalle
-                </button>
-
-                <div
-                  id="plato-detalle-${item.plato}"
-                  class="hidden mt-2 bg-gray-50 p-2 rounded text-sm"
-                >
-                  <div class="italic text-gray-400">Cargando detalle...</div>
-                </div>
-              </div>
-            `
-            : `<div class="text-sm text-gray-700">${item.tipo}</div>`
-          }
-            <div class="text-sm text-gray-500">Cantidad: ${item.cantidad}${item.unidad ? ` ${item.unidad}` : ''}</div>
+        <div class="flex justify-between items-center p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
+          <!-- Info del producto -->
+          <div class="flex flex-col">
+            <div class="font-semibold text-gray-800 dark:text-gray-800 text-lg">
+              ${item.producto.nombre} <span class="text-sm text-gray-500 dark:text-gray-600">- ${item.tipo || ''}</span>
+            </div>
+            <div class="text-sm text-gray-500 dark:text-gray-600 mt-1">
+              ${item.cantidad} ${item.unidad}
+            </div>
           </div>
 
-          <div class="text-right flex flex-col items-end gap-1">
-            <div class="font-semibold">$${unit}</div>
-            <div id="pedido-singular" class="text-gray-500 text-sm">Subtotal: $${sub}</div>
-
-           <button
-              class="btn-delete text-red-500 text-xs hover:underline"
-              data-detalle-id="${item.id}"
-              data-pedido-num="${pedido.numero_pedido}"
-            >
-              Eliminar
-            </button>
-
+          <!-- Precio subtotal -->
+          <div class="flex flex-col items-end">
+            <span class="font-semibold text-gray-900 dark:text-gray-700 text-lg">$${sub.toFixed(2)}</span>
           </div>
         </div>
-
       `;
-    }).join('');
+    })
+    .join('');
 
-    totalPedidos += totalPedido;
+  totalDiv.innerHTML = `<strong>Total: $${total.toFixed(2)}</strong>`;
+}
 
-    const div = document.createElement('div');
-    div.className = 'rounded-xl p-4 shadow-lg mb-2 relative';
-    div.innerHTML = `
-      <div class="flex items-center">
-      </div>
-      <div class="divide-y divide-gray-200">
-        ${detalleHTML}
-      </div>
-    `;
-    container.appendChild(div);
-    totalDiv.innerHTML = `<span class="font-bold text-lg">Total Pedido: $${totalPedidos}</span>`;
-    if (pedidoDiv) pedidoDiv.innerHTML = `<strong>Pedido #${pedido.numero_pedido}</strong> - ${new Date(pedido.fecha).toLocaleString()}`;
+/* =====================
+   WHATSAPP
+===================== */
+document.getElementById('whatsapp-order')?.addEventListener('click', () => {
+  if (!window.userPhone) return alert('Falta teléfono');
+
+  const pedido = window.getOrCreatePedido();
+  if (pedido.pedido_detalle.length === 0) return alert('Carrito vacío');
+
+  const name = (document.getElementById('name') as HTMLInputElement)?.value;
+  const phone = (document.getElementById('phone-order') as HTMLInputElement)?.value;
+  const address = (document.getElementById('address') as HTMLInputElement)?.value;
+  const comments = (document.getElementById('comments') as HTMLTextAreaElement)?.value;
+
+  let msg = `🛒 *Nuevo pedido*\n\n`;
+
+  if (name) msg += `👤 ${name}\n`;
+  if (phone) msg += `📞 ${phone}\n`;
+  if (address) msg += `📍 ${address}\n`;
+  if (comments) msg += `💬 ${comments}\n`;
+
+  msg += `\n*Pedido:*\n`;
+
+  let total = 0;
+
+  pedido.pedido_detalle.forEach((item, i) => {
+    const sub = item.precio_unitario * item.cantidad;
+    total += sub;
+    msg += `${i + 1}. ${item.producto.nombre} x${item.cantidad}${item.unidad || ''} → $${sub.toFixed(2)}\n`;
   });
-}
-// --- Función para actualizar botón toggle ---
-function updatePhoneToggle() {
-  const savedPhone = localStorage.getItem('userPhone');
 
-  if(savedPhone) {
-    userPhone = savedPhone;
-    if(phoneToggleBtn) phoneToggleBtn.textContent = 'Salir';
-    // Cargar pedidos automáticamente
-    window.loadActiveOrders(userPhone);
-  } else {
-    userPhone = '';
-    if(phoneToggleBtn) phoneToggleBtn.textContent = 'Ingresar teléfono';
-    if(activeOrdersContainer) activeOrdersContainer.innerHTML = '<p class="text-gray-500 text-sm">No hay pedidos activos.</p>';
-  }
-}
+  msg += `\n💰 *Total: $${total.toFixed(2)}*`;
 
-// --- Al cargar página ---
-window.addEventListener('DOMContentLoaded', updatePhoneToggle);
-
-// --- Click toggle ---
-phoneToggleBtn?.addEventListener('click', () => {
-  if(userPhone) {
-    // Salir
-    localStorage.removeItem('userPhone');
-    updatePhoneToggle();
-  } else {
-    // Abrir modal
-    phoneModal?.classList.remove('hidden');
-  }
-});
-
-// --- Modal cancelar ---
-phoneCancel?.addEventListener('click', () => {
-  phoneModal?.classList.add('hidden');
-});
-
-// --- Guardar teléfono desde modal ---
-phoneSubmit?.addEventListener('click', () => {
-  const phone = (phoneInputModal as HTMLInputElement).value.trim();
-  if(!phone) { alert("Ingresa un número de teléfono válido."); return; }
-  localStorage.setItem('userPhone', phone);
-  updatePhoneToggle();
-  phoneModal?.classList.add('hidden');
-});
-
-// --- Abrir panel de pedidos ---
-orderToggle?.addEventListener('click', () => {
-  if(!userPhone) { alert("Por favor ingresa tu teléfono primero."); return; }
-  orderPanel?.classList.remove('hidden');
-  window.loadActiveOrders(userPhone);
-});
-
-// --- Cerrar panel ---
-closePanel?.addEventListener('click', () => orderPanel?.classList.add('hidden'));
-
-// --- Geolocalización ---
-const getLocationBtn = document.getElementById('get-location');
-const addressInput = document.getElementById('address');
-if(getLocationBtn && addressInput) {
-  getLocationBtn.addEventListener('click', () => {
-    if(navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        const { latitude, longitude } = pos.coords;
-        (addressInput as HTMLInputElement).value = `Lat: ${latitude.toFixed(5)}, Lon: ${longitude.toFixed(5)}`;
-      }, () => alert('No se pudo obtener la ubicación. Ingresa manualmente.'));
-    } else alert('Geolocalización no soportada.');
-  });
-}
-
-// --- Confirmar pedido ---
-const placeOrderBtn = document.getElementById('place-order');
-placeOrderBtn?.addEventListener('click', async () => {
-  const name = (document.getElementById('name') as HTMLInputElement).value.trim();
-  const phone = (document.getElementById('phone-order') as HTMLInputElement).value.trim();
-  const address = (document.getElementById('address') as HTMLInputElement).value.trim();
-  const comments = (document.getElementById('comments') as HTMLTextAreaElement).value.trim();
-  const totalText = document.getElementById('total-general')?.textContent || '0';
-
-  // Quitar todo excepto números y punto
-  const total = Number(
-    totalText.replace(/[^0-9.]/g, '')
+  const businessPhone = '523751384779';
+  window.open(
+    `https://wa.me/${businessPhone}?text=${encodeURIComponent(msg)}`,
+    '_blank'
   );
-
-  if(!userPhone) { alert("No hay teléfono definido."); return; }
-
-  try {
-    // Actualizar pedido activo más reciente con info del cliente y cerrar
-    const { data, error } = await supabase
-      .from('pedidos')
-      .update({
-        nombre_cliente: name || null,
-        celular: phone || null,
-        ubicacion: address || null,
-        comentarios: comments || null,
-        total : total || null,
-        status: 'pendiente',
-      })
-      .eq('telefono_cliente', userPhone)
-      .eq('status', 'activo');
-
-    if(error) throw error;
-
-    // Limpiar campos y cerrar panel
-    (document.getElementById('name') as HTMLInputElement).value = '';
-    (document.getElementById('phone-order') as HTMLInputElement).value = '';
-    (document.getElementById('address') as HTMLInputElement).value = '';
-    (document.getElementById('comments') as HTMLTextAreaElement).value = '';
-    orderPanel?.classList.add('hidden');
-
-    // Recargar pedidos
-    window.loadActiveOrders(userPhone);
-
-    alert("Pedido confirmado y cerrado exitosamente!");
-  } catch(err) {
-    console.error(err);
-    alert("Error al confirmar pedido.");
-  }
 });
-async function deletePedido(pedidoId: number) {
-  const { data: detalles, error: errorDetalles } = await supabase
-    .from('pedido_detalle')
-    .delete()
-    .eq('id_pedido', pedidoId);
+/* =====================
+   GEOLOCALIZACION
+===================== */
 
-  if (errorDetalles) {
-    console.error('Error al eliminar detalles:', errorDetalles);
-    return;
-  }
+document.getElementById('get-location')?.addEventListener('click', () => {
+  const addressInput = document.getElementById('address') as HTMLInputElement;
+  if (!navigator.geolocation) return alert('Geolocalización no soportada');
 
-  const { data, error } = await supabase
-    .from('pedidos')
-    .delete()
-    .eq('numero_pedido', pedidoId);
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      addressInput.value = `Lat: ${pos.coords.latitude.toFixed(5)}, Lon: ${pos.coords.longitude.toFixed(5)}`;
+    },
+    () => alert('No se pudo obtener la ubicación')
+  );
+});
 
-  if (error) {
-    console.error('Error al eliminar pedido:', error);
-  } else {
-    window.loadActiveOrders(userPhone); // refresca la lista
-  }
+window.updateCartCount = function() {
+  const badge = document.getElementById('cart-count');
+  if (!badge) return;
+
+  const pedido = window.getOrCreatePedido();
+
+  const totalItems = pedido.pedido_detalle.length;
+
+  badge.textContent = totalItems.toString();
+
+  badge.style.display = 'flex';
 }
-async function deleteDetalle(detalleId: number, numeroPedido: number) {
-  const detalleEl = document.getElementById(`detalle-${detalleId}`);
-  if (!detalleEl) return;
-
-  const subtotal = Number(detalleEl.dataset.subtotal);
-  
-  detalleEl.remove();
-  
-  const totalGeneralDiv = document.getElementById('total-general');
-    if (totalGeneralDiv) {
-      let totalGeneral = 0;
-      document.querySelectorAll<HTMLElement>('#pedido-singular').forEach(tp => {
-        totalGeneral += Number(tp.textContent?.replace(/[^0-9.]/g, '')|| 0);
-      });
-      totalGeneralDiv.innerHTML = `<span class="font-bold text-lg">Total Pedido: $${totalGeneral}</span>`;
-    }
-
-  const { error } = await supabase
-    .from('pedido_detalle')
-    .delete()
-    .eq('id', detalleId);
-
-  if (error) {
-    console.error('Error al eliminar detalle:', error);
-    return;
-  }
-
-  const { data: restantes, error: checkError } = await supabase
-    .from('pedido_detalle')
-    .select('id')
-    .eq('id_pedido', numeroPedido)
-    .limit(1);
-
-  if (checkError) {
-    console.error('Error al verificar detalles:', checkError);
-    return;
-  }
-
-  if (!restantes || restantes.length === 0) {
-    await supabase
-      .from('pedidos')
-      .delete()
-      .eq('numero_pedido', numeroPedido)
-      .eq('telefono_cliente', userPhone);
-  }
-}
-document.addEventListener('click', async (e) => {
-  const target = e.target as HTMLElement;
-  
-  if (target && target.classList.contains('btn-delete')) {
-    const detalleId = Number(target.dataset.detalleId);
-    const numeroPedido = Number(target.dataset.pedidoNum);
-
-    if (!isNaN(detalleId) && !isNaN(numeroPedido)) {
-      await deleteDetalle(detalleId, numeroPedido);
-      // recarga los pedidos después de eliminar
-      const phoneInput = document.getElementById('userPhone') as HTMLInputElement;
-      if (phoneInput?.value) {
-        await window.loadActiveOrders(phoneInput.value);
-      }
-    }
-  }
-});
-document.getElementById('btnLoadOrders')?.addEventListener('click', async () => {
-  const phoneInput = document.getElementById('userPhone') as HTMLInputElement;
-  if (phoneInput?.value) {
-    await window.loadActiveOrders(phoneInput.value);
-  }
-});
-
-document.addEventListener('click', async (e) => {
-  const btn = (e.target as HTMLElement)
-    ?.closest('.toggle-plato-detalle') as HTMLElement;
-
-  if (!btn) return;
-
-  const platoId = Number(btn.dataset.platoId);
-  if (!platoId) return;
-
-  const container = document.getElementById(`plato-detalle-${platoId}`);
-  if (!container) return;
-
-  // Toggle
-  container.classList.toggle('hidden');
-
-  // Si ya cargó, no volver a pedir
-  if (container.dataset.loaded) return;
-
-  const { data, error } = await supabase
-    .from('plato_detalle')
-    .select(`
-      cantidad,
-      tipo,
-      id_producto:productos(nombre)
-    `)
-    .eq('id_plato', platoId);
-
-  if (error) {
-    container.innerHTML = '<div class="text-red-500">Error al cargar detalle</div>';
-    return;
-  }
-
-  container.innerHTML = data.map(d => `
-    <div class="text-xs">
-      • ${(d.id_producto as any).nombre} (${d.cantidad})
-    </div>
-  `).join('');
-
-  container.dataset.loaded = 'true';
-});
-
-document.addEventListener('click', (e) => {
-  const target = e.target as HTMLElement;
-
-  document.querySelectorAll('[id^="plato-detalle-"]').forEach((detalle) => {
-    const wrapper = detalle.closest('.plato-wrapper');
-
-    if (!wrapper) return;
-
-    if (wrapper.contains(target)) return;
-
-    detalle.classList.add('hidden');
-  });
-});
-// @ts-ignore
-window.deletePedido = deletePedido;
-// @ts-ignore
-window.deleteDetalle = deleteDetalle;
 
 </script>

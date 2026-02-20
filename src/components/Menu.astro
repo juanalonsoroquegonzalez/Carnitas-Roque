@@ -549,77 +549,226 @@
 </section>
 
 <script>
-import { getSupabaseClient } from '../lib/supabaseClient';
+/* =========================
+   TIPOS
+========================= */
 
-const supabase = getSupabaseClient();
-declare global {
-  interface Window {
-    userPhone?: string;
-    pendingProduct?: Product;
-    crearPedido: (telefono: string) => Promise<any>;
-  }
-}
+import { TRANSITION_PAGE_LOAD } from "astro:transitions/client";
+
 type Product = {
   id: number;
   name: string;
   price: number;
   qty: number;
-  modo?: string;
-  unidad?: string;
-  plato?: number | null;
+  modo?: 'gramos' | 'pesos' | undefined;
+  unidad?: 'g' | 'pza';
+  tipo: string;
 };
 
-const cart: Product[] = [];
-(window as any).cart = cart;
-(window as any).pendingProduct = null;
+interface ProductoPedido {
+  id: number;
+  nombre: string;
+}
+
+interface PedidoDetalle {
+  id: number;
+  cantidad: number;
+  precio_unitario: number;
+  modo?: 'gramos' | 'pesos';
+  unidad: 'g' | 'pza';
+  tipo: string;
+  producto: ProductoPedido;
+}
+
+interface ActivePedido {
+  numero_pedido: number;
+  telefono_cliente: string;
+  fecha: string;
+  pedido_detalle: PedidoDetalle[];
+}
+
+/* =========================
+   ESTADO GLOBAL
+========================= */
+
+declare global {
+  interface Window {
+    userPhone?: string;
+    cart: any[];
+    activePedido?: ActivePedido;
+    updateQty: (btn: HTMLButtonElement, delta: number) => void;
+    handleQtyBlur: (input: HTMLInputElement) => void;
+    sendPedidoWhatsApp: () => void;
+  }
+}
+
+window.cart = [];
+
+/* =========================
+   TELEFONO
+========================= */
 
 const savedPhone = localStorage.getItem('userPhone');
-if (savedPhone) {
-  window.userPhone = savedPhone;
-}
-(window as any).updateQty = function (
-  button: HTMLButtonElement,
-  delta: number
-) {
-  // Encontrar el input dentro del mismo contenedor
-  const container = button.closest('.mt-auto');
-  if (!container) return;
-  
-  const input = container.querySelector('input.qty-input') as HTMLInputElement;
-  if (!input) return;
+if (savedPhone) window.userPhone = savedPhone;
 
-  let numericValue = parseInt(input.value.replace(/[^\d]/g, ''), 10) || 0;
-  numericValue += delta;
-  if (numericValue < 0) numericValue = 0;
-  
+/* =========================
+   UTILIDADES UI
+========================= */
+
+window.updateQty = function (button, delta) {
   const card = button.closest('.bg-white.rounded-2xl');
   if (!card) return;
 
-  const modoInput = card.querySelector('input[name="modo-1"]:checked') as HTMLInputElement | null;
-  const modo = modoInput?.value;
-  if (modo) {
-    
-    if (modo === 'gramos') {
-      if (numericValue < 100) numericValue = 100;
-      input.value = `${numericValue} g`;
-    } else if (modo === 'pesos') {
-      if (numericValue < 50) numericValue = 50;
-      input.value = `$${numericValue}`;
-    }
+  const input = card.querySelector('input.qty-input') as HTMLInputElement;
+  if (!input) return;
+
+  const modo = (card.querySelector('input[name="modo-1"]:checked') as HTMLInputElement)?.value;
+
+  let value = parseInt(input.value.replace(/[^\d]/g, ''), 10) || 0;
+  value += delta;
+
+  if (modo === 'gramos') {
+    if (value < 100) value = 100;
+    input.value = `${value} g`;
+  } else if (modo === 'pesos') {
+    if (value < 50) value = 50;
+    input.value = `$${value}`;
   } else {
-    if (numericValue < 1) numericValue = 1;
-    input.value = numericValue.toString();
+    if (value < 1) value = 1;
+    input.value = value.toString();
   }
 
-  input.dataset.value = numericValue.toString();
+  input.dataset.value = value.toString();
 };
-// Función para actualizar el input cuando cambia el radio button
+
+window.handleQtyBlur = function (input) {
+  const card = input.closest('.bg-white.rounded-2xl');
+  if (!card) return;
+
+  const modo = (card.querySelector('input[name="modo-1"]:checked') as HTMLInputElement)?.value;
+  let value = parseInt(input.value.replace(/[^\d]/g, ''), 10);
+
+  if (modo === 'gramos') {
+    if (!value || value < 100) value = 100;
+    input.value = `${value} g`;
+  } else if (modo === 'pesos') {
+    if (!value || value < 50) value = 50;
+    input.value = `$${value}`;
+  } else {
+    if (!value || value < 1) value = 1;
+    input.value = value.toString();
+  }
+
+  input.dataset.value = value.toString();
+};
+
+/* =========================
+   PEDIDO ACTIVO
+========================= */
+
+window.getOrCreatePedido = function(): ActivePedido {
+  if (!window.activePedido) {
+    window.activePedido = {
+      numero_pedido: Date.now(),
+      telefono_cliente: "",
+      fecha: new Date().toISOString(),
+      pedido_detalle: []
+    };
+  }
+  return window.activePedido;
+}
+declare global {
+  interface Window {
+    userPhone?: string;
+    activePedido?: ActivePedido;
+    getOrCreatePedido: () => ActivePedido;
+  }
+}
+function addToPedido(product: Product, tipo: string) {
+  const pedido = window.getOrCreatePedido();
+    
+    if(product.qty === 0){
+      return;
+    }
+    pedido.pedido_detalle.push({
+      id: Date.now(),
+      cantidad: product.qty,
+      precio_unitario: product.price,
+      modo: product.modo,
+      unidad: product.unidad || 'pza',
+      tipo: tipo,
+      producto: {
+        id: product.id,
+        nombre: product.name
+      }
+    });
+}
+
+/* =========================
+   BOTON AGREGAR
+========================= */
+
+document.querySelectorAll('.add-cart-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const button = btn as HTMLButtonElement;
+    const card = button.closest('.bg-white.rounded-2xl');
+    if (!card) return;
+
+    if (!window.userPhone) {
+      alert('Ingresa tu teléfono');
+      return;
+    }
+
+    const modo = (card.querySelector('input[name="modo-1"]:checked') as HTMLInputElement)?.value as "gramos" | "pesos" | undefined;
+    const input = card.querySelector('input.qty-input') as HTMLInputElement;
+    const tipo = card?.querySelector('input[type="radio"]:checked')?.getAttribute('value');
+    let qty = parseInt(input.value.replace(/[^\d]/g, ''), 10) || 0;
+    let base = parseFloat(button.dataset.priceKg || button.dataset.price || '0');
+
+    let price = base;
+    let cantidadFinal = qty;
+
+    if (modo === 'gramos') {
+      if (qty < 100) qty = 100;
+      price = (qty / 1000) * base;
+      cantidadFinal = qty;
+      console.log(price);
+    } else if (modo === 'pesos') {
+      if (qty < 50) qty = 50;
+      price = qty;
+      cantidadFinal = Math.round((qty / base) * 1000);
+      console.log(price);
+    }
+
+    const product: Product = {
+      id: Number(button.dataset.id),
+      name: button.dataset.name!,
+      price: Number(price.toFixed(2)),
+      qty: cantidadFinal,
+      modo: modo as "gramos" | "pesos" | undefined,
+      tipo: tipo || '',
+      unidad: modo ? 'g' : 'pza'
+    };
+    
+    addToPedido(product, tipo || '');
+    window.updateCartCount();
+    input.value = modo === 'gramos' ? '100 g' : modo === 'pesos' ? '$50' : '0';
+    input.dataset.value = input.value.replace(/[^\d]/g, '');
+  });
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+  const radios = document.querySelectorAll('input[name="modo-1"]');
+  radios.forEach(radio => {
+    radio.addEventListener('change', function(this: HTMLInputElement) {
+      actualizarInputPorModo(this);
+    });
+  });
+});
+
 function actualizarInputPorModo(radio: HTMLInputElement) {
-  // Encontrar la card contenedora
   const card = radio.closest('.bg-white.rounded-2xl');
   if (!card) return;
-  
-  // Encontrar el input de cantidad dentro de la misma card
   const input = card.querySelector('input.qty-input') as HTMLInputElement;
   if (!input) return;
 
@@ -628,7 +777,6 @@ function actualizarInputPorModo(radio: HTMLInputElement) {
 
     numericValue = modo === 'gramos' ? 100 : 50;
 
-  // Aplicar mínimo según modo
   if (modo === 'gramos') {
     if (numericValue < 100) numericValue = 100;
     input.value = `${numericValue} g`;
@@ -639,371 +787,4 @@ function actualizarInputPorModo(radio: HTMLInputElement) {
 
   input.dataset.value = numericValue.toString();
 }
-
-// Agregar event listeners a todos los radios modo-1
-document.addEventListener('DOMContentLoaded', function() {
-  const radios = document.querySelectorAll('input[name="modo-1"]');
-  radios.forEach(radio => {
-    radio.addEventListener('change', function(this: HTMLInputElement) {
-      actualizarInputPorModo(this);
-    });
-  });
-});
-
-// También actualizar si se crean nuevas cards dinámicamente
-const observer = new MutationObserver(function(mutations) {
-  mutations.forEach(mutation => {
-    mutation.addedNodes.forEach(node => {
-      if (node.nodeType === 1) { // Element node
-        const radios = (node as Element).querySelectorAll('input[name="modo-1"]');
-        radios.forEach(radio => {
-          radio.addEventListener('change', function(this: HTMLInputElement) {
-            actualizarInputPorModo(this);
-          });
-        });
-      }
-    });
-  });
-});
-
-observer.observe(document.body, { childList: true, subtree: true });
-// Función para cuando se sale del input
-(window as any).handleQtyBlur = function (input: HTMLInputElement) {
-  const card = input.closest('.bg-white.rounded-2xl');
-  if (!card) return;
-
-  const modoInput = card.querySelector('input[name="modo-1"]:checked') as HTMLInputElement | null;
-  const modo = modoInput?.value;
-
-  let numericValue = parseInt(input.value.replace(/[^\d]/g, ''), 10);
-
-  if (modo === 'gramos') {
-    if (isNaN(numericValue) || numericValue < 100) numericValue = 100;
-    input.value = `${numericValue} g`;
-  } else if (modo === 'pesos') {
-    if (isNaN(numericValue) || numericValue < 50) numericValue = 50;
-    input.value = `$${numericValue}`;
-  } else {
-    if (isNaN(numericValue) || numericValue < 1) numericValue = 1;
-    input.value = numericValue.toString();
-  }
-
-  input.dataset.value = numericValue.toString();
-};
-
-async function addToCartAndDB(product: Product) {
-  const existing = cart.find(item => item.id === product.id);
-  if (existing) existing.qty += product.qty;
-  else cart.push({ ...product });
-
-  try {
-    // Buscar pedido activo
-    let { data: pedido, error } = await supabase
-      .from('pedidos')
-      .select('numero_pedido')
-      .eq('telefono_cliente', window.userPhone)
-      .eq('status', 'activo')
-      .maybeSingle();
-
-    let pedidoId: number;
-    if (pedido) {
-      pedidoId = pedido.numero_pedido;
-    } else {
-      // Crear nuevo pedido
-      if (!window.userPhone) throw new Error('Phone number is required');
-      const newPedido = await window.crearPedido(window.userPhone);
-      pedidoId = newPedido.numero_pedido;
-    }
-    
-    const card = document.querySelector(`[data-id="${product.id}"]`)?.closest('.bg-white');
-    const tipo = card?.querySelector('input[type="radio"]:checked')?.getAttribute('value');
-
-    // Insertar detalle de pedido
-    const { data: detalle, error: errDetalle } = await supabase
-      .from('pedido_detalle')
-      .insert({
-        telefono_cliente: window.userPhone,
-        id_pedido: pedidoId,
-        producto: product.id,
-        precio_unitario: product.price,
-        cantidad: product.qty,
-        modo: product.modo || '',
-        unidad: product.unidad || '',
-        tipo: tipo || 'Desconocido'
-      });
-      alert('Producto agregado al carrito');
-    if (errDetalle) throw errDetalle;
-
-  } catch (err) {
-    console.error('Error al guardar en la base de datos:', err);
-  }
-}
-window.crearPedido = async function (telefono: string) {
-      const numeroPedido = await getNextNumeroPedido(telefono);
-
-      const { data, error } = await supabase
-        .from('pedidos')
-        .insert({
-          telefono_cliente: telefono,
-          numero_pedido: numeroPedido,
-          total: 0,
-          status: 'activo'
-        })
-        .select('id, numero_pedido')
-        .single();
-
-      if (error) throw error;
-      return data;
-    }
-
-    async function getNextNumeroPedido(telefono: string) {
-      const { data, error } = await supabase
-        .from('pedidos')
-        .select('numero_pedido')
-        .eq('telefono_cliente', telefono)
-        .order('numero_pedido', { ascending: false })
-        .maybeSingle();
-
-      if (error && error.code !== 'PGRST116') {
-        throw error;
-      }
-
-      return data ? data.numero_pedido + 1 : 1;
-    }
-
-document.querySelectorAll('.add-cart-btn').forEach((btn) => {
-  const button = btn as HTMLButtonElement;
-  button.addEventListener('click', () => {
-    const card = button.closest('.bg-white.rounded-2xl');
-    if (!card) return;
-    
-    const modoInput = card.querySelector('input[name="modo-1"]:checked') as HTMLInputElement | null;
-    const modo = modoInput?.value;
-    
-    const input = card.querySelector('input.qty-input') as HTMLInputElement;
-    if (!input) return;
-    
-    let qty = parseInt(input.value.replace(/[^\d]/g, ''), 10) || 0;
-    
-    let precioBase = parseFloat(button.dataset.priceKg || button.dataset.price || "0");
-    let precioFinal = precioBase;
-    let cantidadFinal = qty;
-
-    if (modo) {
-      if (modo === 'gramos') {
-        if (qty < 100) qty = 100;
-        
-        precioFinal = (qty / 1000) * precioBase;
-        cantidadFinal = qty;
-        
-      } else if (modo === 'pesos') {
-        if (qty < 50) qty = 50;
-        
-        const gramos = Math.round((qty / precioBase) * 1000);
-        precioFinal = qty; 
-        cantidadFinal = gramos; 
-      }
-    } else {
-      if (qty < 1) alert('Selecciona al menos 1 unidad');
-      cantidadFinal = qty;
-      precioFinal = precioBase;
-      return;
-    }
-
-    const savedPhone = localStorage.getItem('userPhone');
-    if (savedPhone) {
-      window.userPhone = savedPhone;
-    }
-
-    if (!window.userPhone) {
-      alert('Ingresa con tu número de teléfono');
-      return;
-    }
-
-    // Crear objeto producto
-    const product: Product = {
-      id: parseInt(button.dataset.id!),
-      name: button.dataset.name!,
-      price: parseFloat(precioFinal.toFixed(2)), // Redondear a 2 decimales
-      qty: cantidadFinal,
-      modo: modo, // Guardar el modo para referencia
-      unidad: modo === 'gramos' ? 'g' : (modo === 'pesos' ? 'g' : 'pza')
-    };
-
-    // Agregar al carrito
-    addToCartAndDB(product);
-    
-    // Resetear input
-    if (modo === 'gramos') {
-      input.value = '100 g';
-      input.dataset.value = '100';
-    } else if (modo === 'pesos') {
-      input.value = '$50';
-      input.dataset.value = '50';
-    } else {
-      input.value = '0';
-      input.dataset.value = '0';
-    }
-  });
-});
-interface PlateProduct {
-  id: number;
-  name: string;
-  price: number;
-  quantity: number;
-  type?: string;
-}
-// Obtener todos los botones de "Agregar a Plato"
-const plateButtons = document.querySelectorAll<HTMLButtonElement>('.add-plate-btn');
-
-plateButtons.forEach(btn => {
-  btn.addEventListener('click', async () => {
-    const savedPhone = localStorage.getItem('userPhone');
-    if (savedPhone) {
-      window.userPhone = savedPhone;
-    }
-
-    if (!window.userPhone) {
-      alert('Debes ingresar tu teléfono');
-      return;
-    }
-    const card = btn.closest('.bg-white.rounded-2xl');
-    if (!card) return;
-    const input = card.querySelector('input.qty-input') as HTMLInputElement;
-    if (!input) return;
-    
-    let qty = parseInt(input.value.replace(/[^\d]/g, ''), 10) || 0;
-    // Construir objeto PlateProduct desde atributos del botón
-    if (qty <= 0) {
-      alert('Selecciona una cantidad válida para agregar al plato');
-      return;
-    }
-    const product: PlateProduct = {
-      id: Number(btn.dataset.id),
-      name: btn.dataset.name!,
-      price: Number(btn.dataset.price),
-      quantity: qty, 
-      type: btn.dataset.type || undefined
-    };
-
-    // Llamar a la función que guarda en la DB y actualiza UI
-    await addProductToPlateDB(window.userPhone, product);
-    const modoInput = card?.querySelector('input[name="modo-1"]:checked') as HTMLInputElement | null;
-    const modo = modoInput?.value;
-    if (modo === 'gramos') {
-        input.value = '100 g';
-        input.dataset.value = '100';
-      } else if (modo === 'pesos') {
-        input.value = '$50';
-        input.dataset.value = '50';
-      } else {
-        input.value = '0';
-        input.dataset.value = '0';
-      }
-  });
-});
-
-async function addProductToPlateDB(userPhone: string, product: PlateProduct) {
-  try {
-    // 1️⃣ Buscar un plato activo del usuario
-    const { data: platos, error: platoError } = await supabase
-      .from('plato')
-      .select('*')
-      .eq('telefono_cliente', userPhone)
-      .eq('status', 'activo')
-      .order('fecha', { ascending: false })
-      .limit(1);
-
-    if (platoError) throw platoError;
-
-    let platoId: number;
-
-    if (!platos || platos.length === 0) {
-      platoId = await createOrGetPlato(userPhone); // Crear nuevo plato si no hay
-    } else {
-      platoId = platos[0].id;
-    }
-    const card = document.querySelector(`[data-id="${product.id}"]`)?.closest('.bg-white');
-    const tipo = card?.querySelector('input[type="radio"]:checked')?.getAttribute('value');
-    // 2️⃣ Verificar si el producto ya existe en plato_detalle
-    const { data: existing, error: existingError } = await supabase
-      .from('plato_detalle')
-      .select('id, cantidad')
-      .eq('id_producto', product.id)
-      .eq('id_plato', platoId)
-      .eq('tipo', tipo || null)
-      .maybeSingle();
-
-    if (existingError && existingError.code !== 'PGRST116') throw existingError;
-    
-    if (existing) {
-      console.log(platoId);
-      const newQty = existing.cantidad + product.quantity;
-      const { error: updateError } = await supabase
-        .from('plato_detalle')
-        .update({ cantidad: newQty })
-        .eq('id_producto', product.id)
-        .eq('id_plato', platoId)
-        .eq('tipo', tipo);
-      if (updateError) throw updateError;
-    } else {
-      
-      const { error: detalleError } = await supabase
-        .from('plato_detalle')
-        .insert({
-          id_plato: platoId,
-          id_producto: product.id,
-          tipo: tipo || null,
-          cantidad: product.quantity,
-          precio_unitario: product.price,
-          modo: 'pza' // o 'gramos' / 'pesos'
-        });
-      if (detalleError) throw detalleError;
-    }
-
-    window.loadPlate(userPhone);
-  } catch (err) {
-    console.error('Error agregando producto al plato:', err);
-  }
-}
-
-async function createOrGetPlato(userPhone: string) {
-  try {
-    // 1️⃣ Obtener el último plato activo del usuario
-    const { data: lastPlato, error: lastPlatoError } = await supabase
-      .from('plato')
-      .select('numero_plato')
-      .eq('telefono_cliente', userPhone)
-      .eq('status', 'activo')
-      .order('numero_plato', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (lastPlatoError && lastPlatoError.code !== 'PGRST116') throw lastPlatoError;
-    // PGRST116 = no rows found en Supabase, ok si no hay
-
-    // 2️⃣ Nuevo numero_plato
-    const nuevoNumeroPlato = lastPlato ? lastPlato.numero_plato + 1 : 1;
-
-    // 3️⃣ Insertar nuevo plato en DB
-    const { data: newPlato, error: insertError } = await supabase
-      .from('plato')
-      .insert({
-        numero_plato: nuevoNumeroPlato,
-        telefono_cliente: userPhone
-      })
-      .select()
-      .maybeSingle();
-
-    if (insertError) throw insertError;
-
-    return newPlato.id; // Devuelve el ID del plato creado
-
-  } catch (err) {
-    console.error('Error creando plato:', err);
-    return null;
-  }
-}
-
-
 </script>
