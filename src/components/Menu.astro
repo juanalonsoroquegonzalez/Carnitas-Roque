@@ -147,15 +147,6 @@
               >
                 Add carrito
               </button>
-
-              <button
-                class="add-plate-btn btn-primary w-26"
-                data-id="1"
-                data-name="Carnitas"
-                data-price-kg="340"
-              >
-                Add Plato
-              </button>
             </div>
           </div>
 
@@ -897,6 +888,18 @@ plateButtons.forEach(btn => {
 
     // Llamar a la función que guarda en la DB y actualiza UI
     await addProductToPlateDB(window.userPhone, product);
+    const modoInput = card?.querySelector('input[name="modo-1"]:checked') as HTMLInputElement | null;
+    const modo = modoInput?.value;
+    if (modo === 'gramos') {
+        input.value = '100 g';
+        input.dataset.value = '100';
+      } else if (modo === 'pesos') {
+        input.value = '$50';
+        input.dataset.value = '50';
+      } else {
+        input.value = '0';
+        input.dataset.value = '0';
+      }
   });
 });
 

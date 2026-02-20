@@ -569,7 +569,7 @@ document.addEventListener('click', async (e) => {
   }
 
   container.innerHTML = data.map(d => `
-    <div class="text-sm">
+    <div class="mb:text-sm sm:text-xs">
       • ${(d.id_producto as any).nombre} (${d.cantidad})
     </div>
   `).join('');
