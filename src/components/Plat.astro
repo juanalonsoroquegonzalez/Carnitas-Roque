@@ -252,8 +252,6 @@ async function addPlateToCartAndDB(plate: {
       pedidoId = pedido.numero_pedido;
     } else {
       if (!window.userPhone) throw new Error('Phone number is required');
-      const newPedido = await window.crearPedido(window.userPhone);
-      pedidoId = newPedido.numero_pedido;
     }
 
     // 2️⃣ Insertar detalle del pedido (PLATO)
@@ -261,7 +259,6 @@ async function addPlateToCartAndDB(plate: {
       .from('pedido_detalle')
       .insert({
         telefono_cliente: window.userPhone,
-        id_pedido: pedidoId,
         plato: plate.id,
         producto: 6,
         precio_unitario: plate.price,

@@ -245,8 +245,6 @@ function renderCart() {
    WHATSAPP
 ===================== */
 document.getElementById('whatsapp-order')?.addEventListener('click', () => {
-  if (!window.userPhone) return alert('Falta teléfono');
-
   const pedido = window.getOrCreatePedido();
   if (pedido.pedido_detalle.length === 0) return alert('Carrito vacío');
 
