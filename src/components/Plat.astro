@@ -12,10 +12,9 @@ interface Product {
 const { products = [] } = Astro.props as { products?: Product[] };
 ---
 <div class="plato-container w-full max-w-xs sm:max-w-sm md:max-w-md p-3 sm:p-4 bg-gray-50 rounded-xl shadow-md mx-auto flex flex-col h-[400px] sm:h-[400px]">
-  <!-- Encabezado fijo -->
+
   <h2 class="text-lg sm:text-xl font-bold mb-3 sm:mb-4 sm:text-xs flex-shrink-0">Mi Plato</h2>
 
-  <!-- Lista scrollable -->
   <div id="plate-items" class="flex-1 overflow-y-auto space-y-2">
     {products.length === 0 ? (
       <p class="text-gray-500 text-sm sm:text-xs">Agrega aqui productos que quieras que vayan en un mismo plato.</p>
@@ -53,7 +52,6 @@ const { products = [] } = Astro.props as { products?: Product[] };
   <button
     id="add-plate-to-cart"
     class="mt-3 sm:mt-4 w-full sm:w-3/4 btn-primary block mx-auto md:text-xs sm:text-xs flex-shrink-0"
-    onclick="addPlateToCart()"
   >
     Add Carrito
   </button>
@@ -215,5 +213,115 @@ window.removeFromPlate = async function(detalleId: number) {
   }
 };
 
+async function addPlateToCartAndDB(plate: {
+  id: number;
+  qty: number;
+  price: number;
+}) {
+  const cart = (window as any).cart || [];
+
+  // 🛒 Carrito local
+  const existing = cart.find((item: any) => item.plato === plate.id);
+
+  if (existing) {
+    existing.qty += plate.qty;
+  } else {
+    cart.push({
+      plato: plate.id,
+      qty: plate.qty,
+      price: plate.price,
+      modo: 'plato'
+    });
+  }
+
+  try {
+    // 1️⃣ Buscar pedido activo
+    const { data: pedido, error } = await supabase
+      .from('pedidos')
+      .select('numero_pedido')
+      .eq('telefono_cliente', window.userPhone)
+      .eq('status', 'activo')
+      .maybeSingle();
+
+    let pedidoId: number;
+
+    if (pedido) {
+      pedidoId = pedido.numero_pedido;
+    } else {
+      if (!window.userPhone) throw new Error('Phone number is required');
+      const newPedido = await window.crearPedido(window.userPhone);
+      pedidoId = newPedido.numero_pedido;
+    }
+
+    // 2️⃣ Insertar detalle del pedido (PLATO)
+    const { error: errDetalle } = await supabase
+      .from('pedido_detalle')
+      .insert({
+        telefono_cliente: window.userPhone,
+        id_pedido: pedidoId,
+        plato: plate.id,
+        producto: 6,
+        precio_unitario: plate.price,
+        cantidad: plate.qty,
+        modo: 'plato',
+        unidad: 'plato',
+        tipo: 'plato'
+      });
+
+    if (errDetalle) throw errDetalle;
+
+    // 3️⃣ Marcar el plato como INACTIVO
+    const { error: errUpdatePlato } = await supabase
+      .from('plato')
+      .update({ status: 'inactivo' })
+      .eq('id', plate.id)
+      .eq('telefono_cliente', window.userPhone);
+
+    if (errUpdatePlato) throw errUpdatePlato;
+
+    alert('Plato agregado al carrito 🍽️');
+      clearPlateUI();
+  } catch (err) {
+    console.error('Error al guardar el plato en la base de datos:', err);
+  }
+}
+function clearPlateUI() {
+  plate.length = 0;
+
+  const container = document.getElementById('plate-items');
+  if (container) {
+    container.innerHTML = '<p class="text-gray-500 text-sm sm:text-xs">Agrega aqui productos que quieras que vayan en un mismo plato.</p>';
+  }
+  const totalEl = document.getElementById('plate-total');
+  if (totalEl) {
+    totalEl.textContent = '$0.00';
+  }
+}
+document
+  .getElementById('add-plate-to-cart')
+  ?.addEventListener('click', async () => {
+    if (!window.userPhone || plate.length === 0) return;
+
+    const { data: platos } = await supabase
+      .from('plato')
+      .select('id')
+      .eq('telefono_cliente', window.userPhone)
+      .eq('status', 'activo')
+      .order('fecha', { ascending: false })
+      .limit(1);
+
+    if (!platos || platos.length === 0) return;
+
+    const platoId = platos[0].id;
+    const totalPrice = Number(
+      plate.reduce((sum, p) => sum + p.price * p.quantity, 0).toFixed(2)
+    );
+
+    addPlateToCartAndDB({
+      id: platoId,
+      qty: 1,
+      price: totalPrice
+    });
+  });
 
 </script>

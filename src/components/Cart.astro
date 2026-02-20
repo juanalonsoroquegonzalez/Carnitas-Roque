@@ -27,15 +27,13 @@ import Plato from "../components/Plat.astro";
 >
   🛒 Hacer Pedido
 </button>
-<!-- BOTÓN TOGGLE -->
 <button
   id="toggle-plato"
-  class="fixed bottom-20 right-6 z-80 bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition"
+  class="fixed bottom-20 right-6 z-50 px-5 py-3 bg-red-600 text-white p-4 rounded-full shadow-lg hover:bg-red-700 transition"
 >
-  🍽️
+  🍽️ Plato
 </button>
 
-<!-- CONTENEDOR PLATO -->
 <div
   id="plate-container"
   class="fixed bottom-36 right-6 z-50
@@ -196,6 +194,7 @@ window.loadActiveOrders = async function(phone: string) {
         tipo,
         unidad,
         modo,
+        plato,
         producto(
           nombre,
           imagen
@@ -227,8 +226,11 @@ window.loadActiveOrders = async function(phone: string) {
 
   container.innerHTML = '';
   let totalPedidos = 0;
-  let pedido = 0;
-  let fecha = '';
+
+  let totalPlatos = pedidos
+    .flatMap(p => p.pedido_detalle)
+    .filter((d: any) => d.producto?.nombre === 'Plato')
+    .length;
 
   pedidos.forEach(pedido => {
     let totalPedido = 0;
@@ -252,6 +254,10 @@ window.loadActiveOrders = async function(phone: string) {
         unit = item.precio_unitario;
         totalPedido += sub;
       }
+      if (item.producto.nombre === 'Plato') {
+        item.producto.nombre = `Plato #${totalPlatos}`;
+        totalPlatos--;
+      }
       return `
        <div
           id="detalle-${item.id}"
@@ -263,7 +269,26 @@ window.loadActiveOrders = async function(phone: string) {
 
           <div class="flex-1">
             <div class="font-semibold">${item.producto.nombre}</div>
-            <div class="text-sm text-gray-700">${item.tipo}</div>
+           ${item.producto.nombre.startsWith('Plato')
+            ? `
+              <div class="plato-wrapper relative mt-1" data-plato-id="${item.plato}">
+                <button
+                  class="toggle-plato-detalle text-sm text-blue-600 hover:underline"
+                  data-plato-id="${item.plato}"
+                >
+                  Ver detalle
+                </button>
+
+                <div
+                  id="plato-detalle-${item.plato}"
+                  class="hidden mt-2 bg-gray-50 p-2 rounded text-sm"
+                >
+                  <div class="italic text-gray-400">Cargando detalle...</div>
+                </div>
+              </div>
+            `
+            : `<div class="text-sm text-gray-700">${item.tipo}</div>`
+          }
             <div class="text-sm text-gray-500">Cantidad: ${item.cantidad}${item.unidad ? ` ${item.unidad}` : ''}</div>
           </div>
 
@@ -290,7 +315,7 @@ window.loadActiveOrders = async function(phone: string) {
     const div = document.createElement('div');
     div.className = 'rounded-xl p-4 shadow-lg mb-2 relative';
     div.innerHTML = `
-      <div class="mb-2 flex items-center">
+      <div class="flex items-center">
       </div>
       <div class="divide-y divide-gray-200">
         ${detalleHTML}
@@ -511,7 +536,62 @@ document.getElementById('btnLoadOrders')?.addEventListener('click', async () => 
   }
 });
 
+document.addEventListener('click', async (e) => {
+  const btn = (e.target as HTMLElement)
+    ?.closest('.toggle-plato-detalle') as HTMLElement;
 
+  if (!btn) return;
+
+  const platoId = Number(btn.dataset.platoId);
+  if (!platoId) return;
+
+  const container = document.getElementById(`plato-detalle-${platoId}`);
+  if (!container) return;
+
+  // Toggle
+  container.classList.toggle('hidden');
+
+  // Si ya cargó, no volver a pedir
+  if (container.dataset.loaded) return;
+
+  const { data, error } = await supabase
+    .from('plato_detalle')
+    .select(`
+      cantidad,
+      tipo,
+      id_producto:productos(nombre)
+    `)
+    .eq('id_plato', platoId);
+
+  if (error) {
+    container.innerHTML = '<div class="text-red-500">Error al cargar detalle</div>';
+    return;
+  }
+
+  container.innerHTML = data.map(d => `
+    <div class="text-sm">
+      • ${(d.id_producto as any).nombre} (${d.cantidad})
+    </div>
+  `).join('');
+
+  container.dataset.loaded = 'true';
+});
+
+document.addEventListener('click', (e) => {
+  const target = e.target as HTMLElement;
+
+  document.querySelectorAll('[id^="plato-detalle-"]').forEach((detalle) => {
+    const wrapper = detalle.closest('.plato-wrapper');
+
+    if (!wrapper) return;
+
+    // Si el click fue dentro del wrapper → no cerrar
+    if (wrapper.contains(target)) return;
+
+    // Ocultar
+    detalle.classList.add('hidden');
+  });
+});
 // @ts-ignore
 window.deletePedido = deletePedido;
 // @ts-ignore

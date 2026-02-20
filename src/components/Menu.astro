@@ -565,6 +565,7 @@ declare global {
   interface Window {
     userPhone?: string;
     pendingProduct?: Product;
+    crearPedido: (telefono: string) => Promise<any>;
   }
 }
 type Product = {
@@ -574,6 +575,7 @@ type Product = {
   qty: number;
   modo?: string;
   unidad?: string;
+  plato?: number | null;
 };
 
 const cart: Product[] = [];
@@ -718,7 +720,7 @@ async function addToCartAndDB(product: Product) {
     } else {
       // Crear nuevo pedido
       if (!window.userPhone) throw new Error('Phone number is required');
-      const newPedido = await crearPedido(window.userPhone);
+      const newPedido = await window.crearPedido(window.userPhone);
       pedidoId = newPedido.numero_pedido;
     }
     
@@ -745,7 +747,7 @@ async function addToCartAndDB(product: Product) {
     console.error('Error al guardar en la base de datos:', err);
   }
 }
-async function crearPedido(telefono: string) {
+window.crearPedido = async function (telefono: string) {
       const numeroPedido = await getNextNumeroPedido(telefono);
 
       const { data, error } = await supabase
