@@ -714,11 +714,6 @@ document.querySelectorAll('.add-cart-btn').forEach(btn => {
     const card = button.closest('.bg-white.rounded-2xl');
     if (!card) return;
 
-    if (!window.userPhone) {
-      alert('Ingresa tu teléfono');
-      return;
-    }
-
     const modo = (card.querySelector('input[name="modo-1"]:checked') as HTMLInputElement)?.value as "gramos" | "pesos" | undefined;
     const input = card.querySelector('input.qty-input') as HTMLInputElement;
     const tipo = card?.querySelector('input[type="radio"]:checked')?.getAttribute('value');
