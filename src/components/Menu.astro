@@ -1,4 +1,4 @@
-<section class="bg-gray-100 py-12">
+<section id="menu" class="bg-gray-100 py-12 scroll-mt-24">
   <div class="max-w-6xl mx-auto px-6">
     <h2 class="text-3xl font-bold text-center mb-10">Nuestro Menú de Carnitas</h2>
 
@@ -17,7 +17,7 @@
               Elige tu tipo:
             </p>
 
-            <div class="flex gap-1">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 w-full">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -26,17 +26,17 @@
                   class="hidden peer"
                   checked
                 />
-               <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                <span
+                  class="px-2 py-0.5
+                        text-xs sm:text-sm
+                        rounded-xl
+                        border border-gray-300
+                        peer-checked:bg-gradient-to-r
+                        peer-checked:from-yellow-500 peer-checked:to-orange-500
+                        peer-checked:text-white
+                        peer-checked:border-transparent
+                        transition-all duration-200"
+                >
                   Carnitas
                 </span>
               </label>
@@ -49,16 +49,16 @@
                   class="hidden peer"
                 />
                 <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                  class="px-2 py-0.5
+                        text-xs sm:text-sm
+                        rounded-xl
+                        border border-gray-300
+                        peer-checked:bg-gradient-to-r
+                        peer-checked:from-yellow-500 peer-checked:to-orange-500
+                        peer-checked:text-white
+                        peer-checked:border-transparent
+                        transition-all duration-200"
+                >
                   Cueritos
                 </span>
               </label>
@@ -71,16 +71,16 @@
                   class="hidden peer"
                 />
                 <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                  class="px-2 py-0.5
+                        text-xs sm:text-sm
+                        rounded-xl
+                        border border-gray-300
+                        peer-checked:bg-gradient-to-r
+                        peer-checked:from-yellow-500 peer-checked:to-orange-500
+                        peer-checked:text-white
+                        peer-checked:border-transparent
+                        transition-all duration-200"
+                >
                   Surtido
                 </span>
               </label>
@@ -96,7 +96,7 @@
               <label class="cursor-pointer">
                 <input type="radio" name="modo-1" value="gramos" class="hidden peer" checked>
                 <span
-                  class="px-2 py-0.5
+                  class="px-2 py-0.5 flex
                          text-xs sm:text-sm
                          rounded-xl
                          border border-gray-300
@@ -112,7 +112,7 @@
               <label class="cursor-pointer">
                 <input type="radio" name="modo-1" value="pesos" class="hidden peer">
                 <span
-                  class="px-2 py-0.5
+                  class="px-2 py-0.5 flex
                          text-xs sm:text-sm
                          rounded-xl
                          border border-gray-300
@@ -179,26 +179,26 @@
                 Elige tu tipo:
               </p>
 
-              <div class="flex gap-1">
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 w-full">
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input
-                    type="radio"
+                    type="radio" 
                     name="tipo-2"
                     value="Carnitas"
                     class="hidden peer"
                     checked
                   />
                   <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                    class="px-2 py-0.5
+                          text-xs sm:text-sm
+                          rounded-xl
+                          border border-gray-300
+                          peer-checked:bg-gradient-to-r
+                          peer-checked:from-yellow-500 peer-checked:to-orange-500
+                          peer-checked:text-white
+                          peer-checked:border-transparent
+                          transition-all duration-200"
+                  >
                     Carnitas
                   </span>
                 </label>
@@ -211,16 +211,16 @@
                     class="hidden peer"
                   />
                   <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                    class="px-2 py-0.5
+                          text-xs sm:text-sm
+                          rounded-xl
+                          border border-gray-300
+                          peer-checked:bg-gradient-to-r
+                          peer-checked:from-yellow-500 peer-checked:to-orange-500
+                          peer-checked:text-white
+                          peer-checked:border-transparent
+                          transition-all duration-200"
+                  >
                     Cueritos
                   </span>
                 </label>
@@ -232,17 +232,17 @@
                     value="Surtido"
                     class="hidden peer"
                   />
-                 <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                  <span
+                    class="px-2 py-0.5
+                          text-xs sm:text-sm
+                          rounded-xl
+                          border border-gray-300
+                          peer-checked:bg-gradient-to-r
+                          peer-checked:from-yellow-500 peer-checked:to-orange-500
+                          peer-checked:text-white
+                          peer-checked:border-transparent
+                          transition-all duration-200"
+                  >
                     Surtido
                   </span>
                 </label>
@@ -293,7 +293,7 @@
                 Elige tu tipo:
               </p>
 
-              <div class="flex gap-1">
+              <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 w-full">
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input
                     type="radio"
@@ -303,16 +303,16 @@
                     checked
                   />
                   <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                    class="px-2 py-0.5
+                          text-xs sm:text-sm
+                          rounded-xl
+                          border border-gray-300
+                          peer-checked:bg-gradient-to-r
+                          peer-checked:from-yellow-500 peer-checked:to-orange-500
+                          peer-checked:text-white
+                          peer-checked:border-transparent
+                          transition-all duration-200"
+                  >
                     Carnitas
                   </span>
                 </label>
@@ -325,16 +325,16 @@
                     class="hidden peer"
                   />
                   <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                    class="px-2 py-0.5
+                          text-xs sm:text-sm
+                          rounded-xl
+                          border border-gray-300
+                          peer-checked:bg-gradient-to-r
+                          peer-checked:from-yellow-500 peer-checked:to-orange-500
+                          peer-checked:text-white
+                          peer-checked:border-transparent
+                          transition-all duration-200"
+                  >
                     Cueritos
                   </span>
                 </label>
@@ -347,16 +347,16 @@
                     class="hidden peer"
                   />
                   <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                    class="px-2 py-0.5
+                          text-xs sm:text-sm
+                          rounded-xl
+                          border border-gray-300
+                          peer-checked:bg-gradient-to-r
+                          peer-checked:from-yellow-500 peer-checked:to-orange-500
+                          peer-checked:text-white
+                          peer-checked:border-transparent
+                          transition-all duration-200"
+                  >
                     Surtido
                   </span>
                 </label>
@@ -407,7 +407,7 @@
               Elige tu tipo:
             </p>
 
-            <div class="flex gap-1">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 w-full">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -477,7 +477,7 @@
               Elige tu tipo:
             </p>
 
-            <div class="flex gap-1">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-1.5 w-full">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -487,16 +487,16 @@
                   checked
                 />
                 <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                  class="px-2 py-0.5
+                        text-xs sm:text-sm
+                        rounded-xl
+                        border border-gray-300
+                        peer-checked:bg-gradient-to-r
+                        peer-checked:from-yellow-500 peer-checked:to-orange-500
+                        peer-checked:text-white
+                        peer-checked:border-transparent
+                        transition-all duration-200"
+                >
                   Carnitas
                 </span>
               </label>
@@ -508,17 +508,17 @@
                   value="Cueritos"
                   class="hidden peer"
                 />
-               <span
-  class="px-2 py-0.5
-         text-xs sm:text-sm
-         rounded-xl
-         border border-gray-300
-         peer-checked:bg-gradient-to-r
-         peer-checked:from-yellow-500 peer-checked:to-orange-500
-         peer-checked:text-white
-         peer-checked:border-transparent
-         transition-all duration-200"
->
+                <span
+                  class="px-2 py-0.5
+                        text-xs sm:text-sm
+                        rounded-xl
+                        border border-gray-300
+                        peer-checked:bg-gradient-to-r
+                        peer-checked:from-yellow-500 peer-checked:to-orange-500
+                        peer-checked:text-white
+                        peer-checked:border-transparent
+                        transition-all duration-200"
+                >
                   Cueritos
                 </span>
               </label>

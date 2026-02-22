@@ -70,7 +70,7 @@ import Plato from "../components/Plat.astro";
     </button>
 
     <!-- 🟡 Pedidos activos -->
-    <div class="w-full md:w-120 flex flex-col max-h-62 md:max-h-[600px]">
+    <div class="w-full md:w-120 flex flex-col max-h-90 md:max-h-[600px]">
 
       <!-- Header fijo -->
       <div id="pedido-general" class="pb-2">
@@ -103,23 +103,20 @@ import Plato from "../components/Plat.astro";
         class="w-full px-3 py-2 border rounded"
       />
 
-      <input
-        type="tel"
-        id="phone-order"
-        placeholder="Teléfono"
-        class="w-full px-3 py-2 border rounded"
-      />
-
-      <div class="flex flex-col md:flex-row gap-2">
+      <div
+        id="address-container"
+        class="flex flex-col md:flex-row gap-2 hidden"
+      >
         <input
           type="text"
           id="address"
           placeholder="Domicilio"
           class="flex-1 px-3 py-2 border rounded"
         />
+
         <button
           id="get-location"
-          class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 text-sm"
+          class="bg-gray-200 px-3 py-2 rounded hover:bg-gray-300 text-sm hidden"
         >
           Compartir ubicación
         </button>
@@ -130,6 +127,28 @@ import Plato from "../components/Plat.astro";
         placeholder="Comentarios del pedido"
         class="w-full px-3 py-2 border rounded"
       ></textarea>
+      <div class="flex gap-4 mb-2">
+      <label class="flex items-center gap-2 cursor-pointer text-sm">
+        <input
+          type="radio"
+          name="deliveryType"
+          value="pickup"
+          checked
+          class="accent-orange-500"
+        />
+        Recoger pedido
+      </label>
+
+      <label class="flex items-center gap-2 cursor-pointer text-sm">
+        <input
+          type="radio"
+          name="deliveryType"
+          value="delivery"
+          class="accent-orange-500"
+        />
+        Pedido a domicilio
+      </label>
+    </div>
       <button
         id="whatsapp-order"
         class="w-full bg-green-600 text-white py-3 rounded-lg
@@ -161,12 +180,6 @@ window.cart = [];
 /* =====================
    ELEMENTOS UI
 ===================== */
-
-const phoneToggleBtn = document.getElementById('phone-toggle');
-const phoneModal = document.getElementById('phone-modal');
-const phoneInputModal = document.getElementById('phone-input-modal') as HTMLInputElement;
-const phoneCancel = document.getElementById('phone-cancel');
-const phoneSubmit = document.getElementById('phone-submit');
 
 const orderToggle = document.getElementById('order-toggle');
 const orderPanel = document.getElementById('order-panel');
@@ -321,5 +334,25 @@ window.updateCartCount = function() {
 
   badge.style.display = 'flex';
 }
+
+  const radios = document.querySelectorAll('input[name="deliveryType"]');
+  const addressContainer = document.getElementById('address-container');
+
+  function updateDeliveryUI() {
+    const selected = (document.querySelector('input[name="deliveryType"]:checked') as HTMLInputElement)?.value;
+
+    if (selected === 'pickup') {
+      addressContainer?.classList.add('hidden');
+    } else {
+      addressContainer?.classList.remove('hidden');
+    }
+  }
+
+  radios.forEach(radio => {
+    radio.addEventListener('change', updateDeliveryUI);
+  });
+
+  // Estado inicial
+  updateDeliveryUI();
 
 </script>
