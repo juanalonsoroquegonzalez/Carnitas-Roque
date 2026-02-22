@@ -70,7 +70,7 @@ import Plato from "../components/Plat.astro";
     </button>
 
     <!-- 🟡 Pedidos activos -->
-    <div class="w-full md:w-120 flex flex-col max-h-90 md:max-h-[600px]">
+    <div class="w-full md:w-120 flex flex-col h-90 md:h-[600px]">
 
       <!-- Header fijo -->
       <div id="pedido-general" class="pb-2">
@@ -172,6 +172,7 @@ declare global {
     cart: any[];
     userPhone?: string;
     updateCartCount: () => void;
+    removeFromPedido: (id: any) => void;
   }
 }
 
@@ -232,23 +233,44 @@ function renderCart() {
 
       total += sub;
       return `
-        <div class="flex justify-between items-center p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
-          <!-- Info del producto -->
-          <div class="flex flex-col">
-            <div class="font-semibold text-gray-800 dark:text-gray-800 text-lg">
-              ${item.producto.nombre} <span class="text-sm text-gray-500 dark:text-gray-600">- ${item.tipo || ''}</span>
-            </div>
-            <div class="text-sm text-gray-500 dark:text-gray-600 mt-1">
-              ${item.cantidad} ${item.unidad}
-            </div>
-          </div>
+  <div class="flex justify-between items-center p-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-200">
+    
+    <!-- Info del producto -->
+    <div class="flex flex-col">
+      <div class="font-semibold text-gray-800 text-lg">
+        ${item.producto.nombre}
+        <span class="text-sm text-gray-500">- ${item.tipo || ''}</span>
+      </div>
+      <div class="text-sm text-gray-500 mt-1">
+        ${item.cantidad} ${item.unidad}
+      </div>
+    </div>
 
-          <!-- Precio subtotal -->
-          <div class="flex flex-col items-end">
-            <span class="font-semibold text-gray-900 dark:text-gray-700 text-lg">$${sub.toFixed(2)}</span>
-          </div>
-        </div>
-      `;
+    <!-- Precio + eliminar -->
+    <div class="flex items-center gap-3">
+      <span class="font-semibold text-gray-900 text-lg">
+        $${sub.toFixed(2)}
+      </span>
+
+      <button
+        class="text-red-500 hover:text-red-700 transition"
+        onclick="removeFromPedido(${item.id})"
+        title="Eliminar"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="w-5 h-5"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke="currentColor"
+             stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0H7m3-3h4a1 1 0 011 1v1H9V5a1 1 0 011-1z" />
+        </svg>
+      </button>
+    </div>
+
+  </div>
+`;
     })
     .join('');
 
@@ -355,4 +377,15 @@ window.updateCartCount = function() {
   // Estado inicial
   updateDeliveryUI();
 
+
+window.removeFromPedido = function(id) {
+  const pedido = window.getOrCreatePedido();
+
+  pedido.pedido_detalle = pedido.pedido_detalle.filter(
+    item => item.id !== id
+  );
+
+  renderCart();
+  window.updateCartCount?.();
+};
 </script>
