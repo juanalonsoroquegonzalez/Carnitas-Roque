@@ -8,9 +8,15 @@
           <img src="/receta.jpg" alt="Torta de carnitas" class="w-full h-40 sm:h-48 md:h-64 object-cover">
           <div class="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
             <h3 class="text-base sm:text-lg font-semibold mb-1 sm:mb-2">Carnitas</h3>
-            <p class="text-sm sm:text-base text-gray-700 mb-2 sm:mb-4 flex-1">
-              Deliciosas carnitas y cueritos acompañadas de salsa de jitomate cruda y doraditas.
-            </p>
+            <details class="text-sm sm:text-xs text-gray-700 mb-2 sm:mb-4 flex-1">
+              <summary class="cursor-pointer text-indigo-600 hover:underline select-none">
+                Ver detalle
+              </summary>
+
+              <p class="mt-2">
+                Deliciosas carnitas y cueritos acompañadas de salsa de jitomate cruda y doraditas.
+              </p>
+            </details>
             <span class="text-base sm:text-lg font-bold text-yellow-700 mb-3 sm:mb-4">$340 MXN / Kg</span>
             <div class="mb-2 sm:mb-4">
             <p class="text-sm font-medium text-gray-700 mb-2">
@@ -101,24 +107,9 @@
           <div class="mt-auto">
             <!-- Contador de cantidad -->
             <div class="flex items-center gap-2 mb-2">
-              <button
-                class="bg-gray-200 px-3 py-1 rounded-l hover:bg-gray-300 transition"
-                onclick="updateQty(this, -1, this)">
-                -
-              </button>
-
-              <input
-                type="tel"
-                value="100 g"
-                class="qty-input w-20 text-center border-t border-b border-gray-200"
-                onblur="handleQtyBlur(this)"
-              >
-
-              <button
-                class="bg-gray-200 px-3 py-1 rounded-r hover:bg-gray-300 transition"
-                onclick="updateQty(this, 1, this)">
-                +
-              </button>
+              <button class="bg-gray-200 sm:px-3 px-2 sm:py-1 py-0 rounded-l hover:bg-gray-300 transition" onclick="updateQty(this, -1, this)">-</button>
+              <input type="tel" value="100 g" class="qty-input sm:w-20 w-10 sm:text-base text-xs text-center border-t border-b border-gray-200" onblur="handleQtyBlur(this)" >
+              <button class="bg-gray-200 sm:px-3 px-2 sm:py-1 py-0 rounded-r hover:bg-gray-300 transition" onclick="updateQty(this, 1, this)">+</button>
             </div>
 
             <!-- Botones lado a lado -->
@@ -142,9 +133,15 @@
           <img src="/torta.jpg" alt="Torta de carnitas"  class="w-full h-40 sm:h-48 md:h-64 object-cover">
           <div class="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
             <h3 class="text-base sm:text-lg font-semibold mb-1 sm:mb-2">Torta de Carnitas</h3>
-            <p class="text-sm sm:text-base text-gray-700 mb-2 sm:mb-4 flex-1">
-              Bolillo salado para torta con carnitas, salsa de jitomate, cebolla curtida, salsa brava y doraditas.
-            </p>
+            <details class="text-sm sm:text-xs text-gray-700 mb-2 sm:mb-4 flex-1">
+              <summary class="cursor-pointer text-indigo-600 hover:underline select-none">
+                Ver detalle
+              </summary>
+
+              <p class="mt-2">
+                Bolillo salado para torta con carnitas, salsa de jitomate, cebolla curtida, salsa brava y doraditas.
+              </p>
+            </details>
             <span class="text-base sm:text-lg font-bold text-yellow-700 mb-3 sm:mb-4">$55 MXN</span>
             <div class="mb-2 sm:mb-4">
               <p class="text-sm font-medium text-gray-700 mb-2">
@@ -195,9 +192,9 @@
            <div class="mt-auto">
             <!-- Contador de cantidad -->
             <div class="flex items-center gap-2 mb-2">
-              <button class="bg-gray-200 px-3 py-1 rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
-              <input type="text" value="0" class="qty-input w-12 text-center border-t border-b border-gray-200" readonly> 
-              <button class="bg-gray-200 px-3 py-1 rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
+              <button class="bg-gray-200 sm:px-3 px-2 sm:py-1 py-0  rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
+              <input type="text" value="0" class="qty-input sm:w-12 sm:text-base text-xs w-10 text-center border-t border-b border-gray-200" readonly> 
+              <button class="bg-gray-200 sm:px-3 px-2 sm:py-1 py-0  rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
             </div>
 
             <!-- Botones lado a lado -->
@@ -228,9 +225,15 @@
           <img src="/Carnitas.jpg" alt="Tacos de carnitas"  class="w-full h-40 sm:h-48 md:h-64 object-cover">
           <div class="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
             <h3 class="text-base sm:text-lg font-semibold mb-1 sm:mb-2">Tacos de Carnitas</h3>
-            <p class="text-sm sm:text-base text-gray-700 mb-2 sm:mb-4 flex-1">
-              Tortilla de maiz de tamaño normal con carnitas con cebolla, cilantro, repollo, salsa de jitomate cruda, salsa picante de tomate y guacamole.
-            </p>
+            <details class="text-sm sm:text-xs text-gray-700 mb-2 sm:mb-4 flex-1">
+              <summary class="cursor-pointer text-indigo-600 hover:underline select-none">
+                Ver detalle
+              </summary>
+
+              <p class="mt-2">
+                Tortilla de maiz de tamaño normal con carnitas con cebolla, cilantro, repollo, salsa de jitomate cruda, salsa picante de tomate y guacamole.
+              </p>
+            </details>
             <span class="text-base sm:text-lg font-bold text-yellow-700 mb-3 sm:mb-4">$25 MXN</span>
             <div class="mb-2 sm:mb-4">
               <p class="text-sm font-medium text-gray-700 mb-2">
@@ -280,9 +283,9 @@
            <div class="mt-auto">
             <!-- Contador de cantidad -->
             <div class="flex items-center gap-2 mb-2">
-              <button class="bg-gray-200 px-3 py-1 rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
-              <input type="text" value="0" class="qty-input w-12 text-center border-t border-b border-gray-200" readonly> 
-              <button class="bg-gray-200 px-3 py-1 rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
+              <button class="bg-gray-200 sm:px-3 px-2 sm:py-1 py-0  rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
+              <input type="text" value="0" class="qty-input sm:w-12 w-10 sm:text-base text-xs text-center border-t border-b border-gray-200" readonly> 
+              <button class="bg-gray-200 sm:px-3 px-2 sm:py-1 py-0  rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
             </div>
 
             <!-- Botones lado a lado -->
@@ -313,9 +316,15 @@
           <img src="/botanero.jpg" alt="Tacos Dorados"  class="w-full h-40 sm:h-48 md:h-64 object-cover">
           <div class="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
             <h3 class="text-base sm:text-lg font-semibold mb-1 sm:mb-2">Tacos Dorados</h3>
-            <p class="text-sm sm:text-base text-gray-700 mb-2 sm:mb-4 flex-1">
-              Tortilla de maiz de tamaño normal con carnitas con cebolla, salsa de jitomate, cilantro, repollo, salsa de jitomate cruda, salsa picante de tomate y guacamole.
-            </p>
+            <details class="text-sm sm:text-xs text-gray-700 mb-2 sm:mb-4 flex-1">
+              <summary class="cursor-pointer text-indigo-600 hover:underline select-none">
+                Ver detalle
+              </summary>
+
+              <p class="mt-2">
+                Tortilla de maiz de tamaño normal con carnitas con cebolla, salsa de jitomate, cilantro, repollo, salsa de jitomate cruda, salsa picante de tomate y guacamole.
+              </p>
+            </details>
             <span class="text-base sm:text-lg font-bold text-yellow-700 mb-3 sm:mb-4">$9 MXN</span>
             <div class="mb-2 sm:mb-4">
             <p class="text-sm font-medium text-gray-700 mb-2">
@@ -353,9 +362,9 @@
            <div class="mt-auto">
             <!-- Contador de cantidad -->
             <div class="flex items-center gap-2 mb-2">
-              <button class="bg-gray-200 px-3 py-1 rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
-              <input type="text" value="0" class="qty-input w-12 text-center border-t border-b border-gray-200" readonly> 
-              <button class="bg-gray-200 px-3 py-1 rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
+              <button class="bg-gray-200 sm:px-3 px-2 sm:py-1 py-0  rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
+              <input type="text" value="0" class="qty-input sm:w-12 w-10 sm:text-base text-xs text-center border-t border-b border-gray-200" readonly> 
+              <button class="bg-gray-200 sm:px-3 px-2 sm:py-1 py-0  rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
             </div>
 
             <!-- Botones lado a lado -->
@@ -386,9 +395,15 @@
           <img src="/dael.jpg" alt="Tacos Dorados con Carnitas"  class="w-full h-40 sm:h-48 md:h-64 object-cover">
           <div class="p-4 sm:p-5 md:p-6 flex flex-col flex-1">
             <h3 class="text-base sm:text-lg font-semibold mb-1 sm:mb-2">Tacos Dorados con Carnitas</h3>
-            <p class="text-sm sm:text-base text-gray-700 mb-2 sm:mb-4 flex-1">
-              Tortilla de maiz de tamaño normal con carnitas con cebolla, salsa de jitomate, cilantro, repollo, salsa de jitomate cruda, salsa picante de tomate y guacamole.
-            </p>
+             <details class="text-sm sm:text-xs text-gray-700 mb-2 sm:mb-4 flex-1">
+              <summary class="cursor-pointer text-indigo-500 hover:underline select-none">
+                Ver detalle
+              </summary>
+
+              <p class="mt-2">
+                Tortilla de maiz de tamaño normal con carnitas con cebolla, salsa de jitomate, cilantro, repollo, salsa de jitomate cruda, salsa picante de tomate y guacamole.
+              </p>
+            </details>
             <span class="text-base sm:text-lg font-bold text-yellow-700 mb-3 sm:mb-4">$22 MXN</span>
             <div class="mb-2 sm:mb-4">
             <p class="text-sm font-medium text-gray-700 mb-2">
@@ -437,9 +452,9 @@
           </div>
                     <div class="mt-auto">
             <div class="flex items-center gap-2 mb-2">
-              <button class="bg-gray-200 px-3 py-1 rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
-              <input type="text" value="0" class="qty-input w-12 text-center border-t border-b border-gray-200" readonly> 
-              <button class="bg-gray-200 px-3 py-1 rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
+              <button class="bg-gray-200 sm:px-3 px-2 sm:py-1 py-0  rounded-l hover:bg-gray-300 transition-colors" onclick="updateQty(this, -1)">-</button> 
+              <input type="text" value="0" class="qty-input sm:w-12 w-10 sm:text-base text-xs text-center border-t border-b border-gray-200" readonly> 
+              <button class="bg-gray-200 sm:px-3 px-2 sm:py-1 py-0  rounded-r hover:bg-gray-300 transition-colors" onclick="updateQty(this, 1)">+</button>
             </div>
 
             <div class="flex gap-2">
@@ -646,12 +661,10 @@ document.querySelectorAll('.add-cart-btn').forEach(btn => {
       if (qty < 100) qty = 100;
       price = (qty / 1000) * base;
       cantidadFinal = qty;
-      console.log(price);
     } else if (modo === 'pesos') {
       if (qty < 50) qty = 50;
       price = qty;
       cantidadFinal = Math.round((qty / base) * 1000);
-      console.log(price);
     }
 
     const product: Product = {
@@ -668,6 +681,7 @@ document.querySelectorAll('.add-cart-btn').forEach(btn => {
     window.updateCartCount();
     input.value = modo === 'gramos' ? '100 g' : modo === 'pesos' ? '$50' : '0';
     input.dataset.value = input.value.replace(/[^\d]/g, '');
+    alert(`Agregado al carrito: ${product.name} - Cantidad: ${product.qty} ${product.unidad} - Precio: $${product.price.toFixed(2)}`);
   });
 });
 
